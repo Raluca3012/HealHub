@@ -10,7 +10,6 @@ import {
     View,
 } from 'react-native';
 
-
 interface Doctor {
     id: number;
     name: string;
