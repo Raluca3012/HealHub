@@ -130,4 +130,62 @@ public function index()
             'rating_count' => $ratingCount,
         ]);
     }
+
+public function patientOverview($mode)
+{
+    $baseQuery = DB::table('appointments')
+        ->join('patients', 'appointments.patient_id', '=', 'patients.id');
+
+    switch ($mode) {
+        case 'weekly':
+            $data = $baseQuery->selectRaw("
+                    DAYNAME(appointments.appointment_date) AS period,
+                    SUM(CASE WHEN patients.status = 'Recovered' THEN 1 ELSE 0 END) AS recovered,
+                    SUM(CASE WHEN patients.status != 'Recovered' THEN 1 ELSE 0 END) AS hospitalized
+                ")
+                ->groupBy('period')
+                ->orderByRaw("FIELD(period, 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday')")
+                ->get();
+            break;
+
+        case 'monthly':
+            $data = $baseQuery->selectRaw("
+                    DATE_FORMAT(appointments.appointment_date, '%b') AS period,
+                    SUM(CASE WHEN patients.status = 'Recovered' THEN 1 ELSE 0 END) AS recovered,
+                    SUM(CASE WHEN patients.status != 'Recovered' THEN 1 ELSE 0 END) AS hospitalized
+                ")
+                ->groupBy('period')
+                ->orderByRaw("FIELD(period, 'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec')")
+                ->get();
+            break;
+
+        case 'yearly':
+        default:
+            $data = $baseQuery->selectRaw("
+                    YEAR(appointments.appointment_date) AS period,
+                    SUM(CASE WHEN patients.status = 'Recovered' THEN 1 ELSE 0 END) AS recovered,
+                    SUM(CASE WHEN patients.status != 'Recovered' THEN 1 ELSE 0 END) AS hospitalized
+                ")
+                ->groupBy('period')
+                ->orderBy('period')
+                ->get();
+            break;
+    }
+
+    return response()->json($data);
+}
+
+
+public function genderDistribution()
+{
+    $male = DB::table('patients')->where('gender', 'Male')->count();
+    $female = DB::table('patients')->where('gender', 'Female')->count();
+
+    return response()->json([
+        'male' => $male,
+        'female' => $female,
+    ]);
+}
+
+
 }

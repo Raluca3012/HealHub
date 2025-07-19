@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\DoctorController;
-
+use App\Http\Controllers\Api\StatsController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -24,6 +24,11 @@ Route::get('/patient/{id}/details', [PatientController::class, 'getDetails']);
 Route::get('/doctor/{id}/details', [DoctorController::class, 'getDoctorDetails']);
 
 Route::get('/doctors/top-rated', [DoctorController::class, 'topRated']);
+
+Route::get('/stats', [StatsController::class, 'index']);
+Route::get('/patient-overview/{mode}', [StatsController::class, 'patientOverview']);
+Route::get('/patient-overview/{mode}', [PatientController::class, 'patientOverview']);
+Route::get('/gender-distribution', [PatientController::class, 'genderDistribution']);
 
 
 

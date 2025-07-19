@@ -1,42 +1,53 @@
-import React from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G, Path, Text as SvgText } from 'react-native-svg';
 
-const male = 20;
-const female = 80;
-const total = male + female;
-
-const series = [
-  { value: male, color: '#4A90E2' },
-  { value: female, color: '#CBD8F6' },
-];
-
-// Calculează coordonatele pe cerc
-const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
-  const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
-  return {
-    x: centerX + radius * Math.cos(angleInRadians),
-    y: centerY + radius * Math.sin(angleInRadians),
-  };
-};
-
-// Creează path pentru sectorul de cerc
-const createArcPath = (startAngle: number, endAngle: number, radius: number, center: number) => {
-  const start = polarToCartesian(center, center, radius, endAngle);
-  const end = polarToCartesian(center, center, radius, startAngle);
-  const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
-
-  return [
-    `M ${start.x} ${start.y}`,
-    `A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
-  ].join(' ');
+type GenderData = {
+  male: number;
+  female: number;
 };
 
 export default function GenderPieChart() {
+  const [data, setData] = useState<GenderData>({ male: 0, female: 0 });
+
+  useEffect(() => {
+    axios.get('http://localhost:8000/api/gender-distribution')
+      .then(res => setData(res.data))
+      .catch(err => console.error('Gender fetch error:', err));
+  }, []);
+
+  const total = data.male + data.female;
+  if (total === 0) return null; // sau loading spinner
+
+  const series = [
+    { value: (data.male / total) * 100, color: '#4A90E2' },
+    { value: (data.female / total) * 100, color: '#CBD8F6' },
+  ];
+
   const size = 200;
   const strokeWidth = 30;
   const center = size / 2;
   const radius = (size - strokeWidth) / 2;
+
+  const polarToCartesian = (centerX: number, centerY: number, radius: number, angleInDegrees: number) => {
+    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
+    return {
+      x: centerX + radius * Math.cos(angleInRadians),
+      y: centerY + radius * Math.sin(angleInRadians),
+    };
+  };
+
+  const createArcPath = (startAngle: number, endAngle: number, radius: number, center: number) => {
+    const start = polarToCartesian(center, center, radius, endAngle);
+    const end = polarToCartesian(center, center, radius, startAngle);
+    const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+
+    return [
+      `M ${start.x} ${start.y}`,
+      `A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
+    ].join(' ');
+  };
 
   let startAngle = 0;
 
@@ -47,11 +58,11 @@ export default function GenderPieChart() {
       <Svg width={size} height={size}>
         <G rotation="-90" origin={`${center}, ${center}`}>
           {series.map((slice, index) => {
-            const angle = (slice.value / total) * 360;
+            const angle = (slice.value / 100) * 360;
             const endAngle = startAngle + angle;
             const path = createArcPath(startAngle, endAngle, radius, center);
             const midAngle = startAngle + angle / 2;
-            const labelPos = polarToCartesian(center, center, radius + 20, midAngle);
+            const labelPos = polarToCartesian(center, center, radius , midAngle);
             startAngle += angle;
 
             return (
@@ -63,7 +74,6 @@ export default function GenderPieChart() {
                   strokeWidth={strokeWidth}
                   strokeLinecap="round"
                 />
-                {/* Bulina albă cu text */}
                 <G>
                   <Circle cx={labelPos.x} cy={labelPos.y} r={16} fill="#fff" />
                   <SvgText
@@ -71,12 +81,15 @@ export default function GenderPieChart() {
                     y={labelPos.y}
                     textAnchor="middle"
                     alignmentBaseline="middle"
-                    fontSize={12}
+                    fontSize={14}
                     fontWeight="bold"
-                    fill="#4A0072"
+                    fill="#333"
+                    transform={`rotate(90, ${labelPos.x}, ${labelPos.y})`}
                   >
-                    {slice.value}%
+                    {Math.round(slice.value)}%
                   </SvgText>
+
+
                 </G>
               </G>
             );
@@ -97,6 +110,7 @@ export default function GenderPieChart() {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

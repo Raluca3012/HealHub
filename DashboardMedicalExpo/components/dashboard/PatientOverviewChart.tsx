@@ -1,43 +1,44 @@
-import React, { useState } from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { G, Line, Rect, Text as SvgText } from 'react-native-svg';
 
-const dataByMode = {
-  yearly: {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-    recovered: [18000, 10000, 19000, 20000, 21000, 15000, 23000, 21000, 26000, 6000, 17000, 20000],
-    hospitalized: [7000, 12000, 6000, 5000, 7000, 8000, 6000, 5000, 4000, 11000, 8000, 7000],
-  },
-  monthly: {
-    labels: ['W1', 'W2', 'W3', 'W4'],
-    recovered: [8000, 9500, 10200, 11000],
-    hospitalized: [4000, 3000, 5000, 4500],
-  },
-  weekly: {
-    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    recovered: [1500, 1300, 1700, 1900, 2000, 1800, 1600],
-    hospitalized: [700, 600, 800, 500, 900, 750, 650],
-  },
-};
 
-const maxValue = 30000;
+type ChartData = {
+  period: string;
+  recovered: number;
+  hospitalized: number;
+};
 
 export default function PatientOverviewChart() {
   const [mode, setMode] = useState<'yearly' | 'monthly' | 'weekly'>('yearly');
+  const [chartData, setChartData] = useState<ChartData[]>([]);
 
-  const { labels, recovered, hospitalized } = dataByMode[mode];
+  useEffect(() => {
+    axios
+      .get<ChartData[]>(`http://localhost:8000/api/patient-overview/${mode}`)
+      .then((res) => {
+        const cleaned = res.data.map(item => ({
+          ...item,
+          recovered: Number(item.recovered),
+          hospitalized: Number(item.hospitalized),
+        }));
+        setChartData(cleaned);
+      })
+      .catch((err) => console.error('Chart error:', err));
+  }, [mode]);
+
+  const rawMax = Math.max(...chartData.map(d => Math.max(d.recovered, d.hospitalized)), 0);
+  const maxValue = rawMax < 10 ? 10 : Math.ceil(rawMax / 10) * 10;
 
   const chartWidth = 750;
   const chartHeight = 170;
-  const yOffset = 10; // for vertical spacing
-
   const barWidth = 13;
   const spacing = 27;
   const groupWidth = barWidth * 2 + spacing;
-
-  const yAxisSteps = 5;
-  const stepValue = maxValue / yAxisSteps;
-  const stepHeight = chartHeight / yAxisSteps;
+  const stepCount = 5;
+  const stepValue = maxValue / stepCount;
+  const stepHeight = chartHeight / stepCount;
 
   return (
     <View style={styles.container}>
@@ -55,69 +56,32 @@ export default function PatientOverviewChart() {
       </View>
 
       <Svg width={chartWidth} height={chartHeight + 40}>
-        {/* Y Axis labels and dotted lines */}
-        {Array.from({ length: yAxisSteps + 1 }).map((_, i) => {
-          const y = chartHeight - i * stepHeight + yOffset;
-          const label = `${Math.round(i * stepValue / 1000)}k`;
-
+        {Array.from({ length: stepCount + 1 }).map((_, i) => {
+          const y = chartHeight - i * stepHeight + 10;
+          const label = `${Math.round(i * stepValue)}`;
           return (
-            <G key={`grid-${i}`}>
-              <Line
-                x1={30}
-                y1={y}
-                x2={chartWidth + 30}
-                y2={y}
-                stroke="#ccc"
-                strokeDasharray="4,4"
-                strokeWidth={1}
-              />
-              <SvgText
-                x={28}
-                y={y + 4}
-                fontSize="10"
-                fill="#888"
-                textAnchor="end"
-              >
+            <G key={i}>
+              <Line x1={30} y1={y} x2={chartWidth + 30} y2={y} stroke="#ccc" strokeDasharray="4,4" />
+              <SvgText x={28} y={y + 4} fontSize="10" fill="#888" textAnchor="end">
                 {label}
               </SvgText>
             </G>
           );
         })}
 
-        {/* Bars */}
-        {recovered.map((value, index) => {
-          const recHeight = (value / maxValue) * chartHeight;
-          const hosHeight = (hospitalized[index] / maxValue) * chartHeight;
+        {chartData.map((item, index) => {
+          const recHeight = (item.recovered / maxValue) * chartHeight;
+          const hosHeight = (item.hospitalized / maxValue) * chartHeight;
           const x = index * (groupWidth + 8) + 40;
-          const yRec = chartHeight - recHeight + yOffset;
-          const yHos = chartHeight - hosHeight + yOffset;
+          const yRec = chartHeight - recHeight + 10;
+          const yHos = chartHeight - hosHeight + 10;
 
           return (
             <G key={index}>
-              <Rect
-                x={x}
-                y={yHos}
-                width={barWidth}
-                height={hosHeight}
-                fill="#CBD8F6"
-                rx={3}
-              />
-              <Rect
-                x={x + barWidth + 2}
-                y={yRec}
-                width={barWidth}
-                height={recHeight}
-                fill="#4A5AA6"
-                rx={3}
-              />
-              <SvgText
-                x={x + barWidth}
-                y={chartHeight + yOffset + 25}
-                fontSize="10"
-                fill="#666"
-                textAnchor="middle"
-              >
-                {labels[index]}
+              <Rect x={x} y={yHos} width={barWidth} height={hosHeight} fill="#CBD8F6" rx={3} />
+              <Rect x={x + barWidth + 2} y={yRec} width={barWidth} height={recHeight} fill="#4A5AA6" rx={3} />
+              <SvgText x={x + barWidth} y={chartHeight + 30} fontSize="10" fill="#666" textAnchor="middle">
+                {item.period}
               </SvgText>
             </G>
           );
@@ -137,6 +101,8 @@ export default function PatientOverviewChart() {
     </View>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {
