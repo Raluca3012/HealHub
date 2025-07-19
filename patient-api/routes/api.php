@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\StatsController;
+use App\Http\Controllers\Api\AppointmentController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -29,6 +31,7 @@ Route::get('/stats', [StatsController::class, 'index']);
 Route::get('/patient-overview/{mode}', [StatsController::class, 'patientOverview']);
 Route::get('/patient-overview/{mode}', [PatientController::class, 'patientOverview']);
 Route::get('/gender-distribution', [PatientController::class, 'genderDistribution']);
+Route::get('/appointments/by-date/{date}', [AppointmentController::class, 'getByDate']);
 
 
 

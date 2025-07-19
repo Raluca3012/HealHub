@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import {
     Image,
     Modal,
@@ -12,182 +13,180 @@ import {
 } from 'react-native';
 
 const months = [
-    'January', 'February', 'March', 'April',
-    'May', 'June', 'July', 'August',
-    'September', 'October', 'November', 'December',
+  'January', 'February', 'March', 'April',
+  'May', 'June', 'July', 'August',
+  'September', 'October', 'November', 'December',
 ];
 
 const getMonthDates = (year: number, monthIndex: number) => {
-    const days = [];
-    const totalDays = new Date(year, monthIndex + 1, 0).getDate();
-    for (let i = 1; i <= totalDays; i++) {
-        const date = new Date(year, monthIndex, i);
-        days.push({
-            date,
-            label: date.toLocaleDateString('en-US', { weekday: 'short' }),
-            day: i,
-        });
-    }
-    return days;
+  const days = [];
+  const totalDays = new Date(year, monthIndex + 1, 0).getDate();
+  for (let i = 1; i <= totalDays; i++) {
+    const date = new Date(year, monthIndex, i);
+    days.push({
+      date,
+      label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      day: i,
+    });
+  }
+  return days;
 };
 
-const generateMockAppointments = (date: string, count: number) =>
-    Array.from({ length: count }, (_, i) => ({
-        name: `Patient ${String.fromCharCode(65 + i)} (${date.slice(-2)})`,
-        doctor: ['Dr. Preethi', 'Dr. Smith', 'Dr. Adams'][i % 3],
-        disease: ['Brain Tumour', 'Diabetes', 'Heart Disease'][i % 3],
-        date: new Date(date).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-        }),
-        time: `${10 + (i % 3)}:00AM`,
-        image: `https://i.pravatar.cc/150?img=${i + 1}`,
-        id: `#N-00${900 + i}`,
-    }));
-
 export default function AppointmentsScreen() {
-    const [selectedMonthIndex, setSelectedMonthIndex] = useState(new Date().getMonth());
-    const [selectedDay, setSelectedDay] = useState(new Date().getDate());
-    const [monthSelectorVisible, setMonthSelectorVisible] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
-    const selectedYear = new Date().getFullYear();
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(new Date().getMonth());
+  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
+  const [monthSelectorVisible, setMonthSelectorVisible] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [appointments, setAppointments] = useState([]);
+  const selectedYear = new Date().getFullYear();
 
-    const monthDates = getMonthDates(selectedYear, selectedMonthIndex);
-    const selectedDate = new Date(selectedYear, selectedMonthIndex, selectedDay).toISOString();
-    const appointments = generateMockAppointments(selectedDate, 6 + (selectedDay % 4));
+  const fetchAppointments = async () => {
+    const formattedDate = new Date(selectedYear, selectedMonthIndex, selectedDay)
+      .toISOString()
+      .split('T')[0];
 
-    return (
-        <View style={styles.wrapper}>
+    try {
+      const response = await axios.get(`http://localhost:8000/api/appointments/by-date/${formattedDate}`);
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  };
 
-            <View style={styles.calendarHeader}>
-                <Pressable onPress={() => setMonthSelectorVisible(!monthSelectorVisible)}>
-                    <Text style={styles.monthLabel}>
-                        {months[selectedMonthIndex]} <Feather name="chevron-down" size={16} />
-                    </Text>
-                </Pressable>
+  useEffect(() => {
+    fetchAppointments();
+  }, [selectedDay, selectedMonthIndex]);
 
-                <Pressable style={styles.addBtn} onPress={() => setModalVisible(true)}>
-                    <Feather name="plus" size={14} color="#fff" />
-                    <Text style={{ color: '#fff', marginLeft: 6 }}>Add Appointment</Text>
-                </Pressable>
-            </View>
+  const monthDates = getMonthDates(selectedYear, selectedMonthIndex);
 
-            {monthSelectorVisible && (
-                <View style={styles.monthDropdown}>
-                    {months.map((m, idx) => (
-                        <Pressable
-                            key={m}
-                            style={[
-                                styles.monthItem,
-                                selectedMonthIndex === idx && { backgroundColor: '#eef' },
-                            ]}
-                            onPress={() => {
-                                setSelectedMonthIndex(idx);
-                                setSelectedDay(1);
-                                setMonthSelectorVisible(false);
-                            }}
-                        >
-                            <Text>{m}</Text>
-                        </Pressable>
-                    ))}
-                </View>
-            )}
+  return (
+    <View style={styles.wrapper}>
+      {/* Header */}
+      <View style={styles.calendarHeader}>
+        <Pressable onPress={() => setMonthSelectorVisible(!monthSelectorVisible)}>
+          <Text style={styles.monthLabel}>
+            {months[selectedMonthIndex]} <Feather name="chevron-down" size={16} />
+          </Text>
+        </Pressable>
 
+        <Pressable style={styles.addBtn} onPress={() => setModalVisible(true)}>
+          <Feather name="plus" size={14} color="#fff" />
+          <Text style={{ color: '#fff', marginLeft: 6 }}>Add Appointment</Text>
+        </Pressable>
+      </View>
 
-            <View style={{ marginBottom: 16 }}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {monthDates.map((item) => (
-                        <Pressable
-                            key={item.day}
-                            onPress={() => setSelectedDay(item.day)}
-                            style={[
-                                styles.dayItem,
-                                item.day === selectedDay && styles.activeDay,
-                            ]}
-                        >
-                            <Text style={styles.dayLabel}>{item.label}</Text>
-                            <Text style={styles.dayNumber}>{item.day}</Text>
-                        </Pressable>
-                    ))}
-                </ScrollView>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.appointmentScroll}>
-                <View style={styles.appointmentBox}>
-                    <View style={styles.grid}>
-                        {appointments.map((item) => (
-                            <View key={item.id} style={styles.card}>
-                                <View style={styles.cardHeader}>
-                                    <Image source={{ uri: item.image }} style={styles.avatar} />
-                                    <View>
-                                        <Text style={styles.name}>{item.name}</Text>
-                                        <Text style={styles.id}>{item.id}</Text>
-                                    </View>
-                                </View>
-
-
-                                <View style={styles.table}>
-                                    <View style={styles.tableCell}>
-                                        <Feather name="activity" size={14} color="#2f3c7e" />
-                                        <Text style={styles.info}>{item.disease}</Text>
-                                    </View>
-                                    <View style={styles.tableCell}>
-                                        <Feather name="user" size={14} color="#2f3c7e" />
-                                        <Text style={styles.info}>{item.doctor}</Text>
-                                    </View>
-                                    <View style={styles.tableCell}>
-                                        <Feather name="calendar" size={14} color="#2f3c7e" />
-                                        <Text style={styles.info}>{item.date}</Text>
-                                    </View>
-                                    <View style={styles.tableCell}>
-                                        <Feather name="clock" size={14} color="#2f3c7e" />
-                                        <Text style={styles.info}>{item.time}</Text>
-                                    </View>
-                                </View>
-                            </View>
-                        ))}
-                    </View>
-                </View>
-            </ScrollView>
-
-            <Modal
-                visible={modalVisible}
-                animationType="slide"
-                transparent
-                onRequestClose={() => setModalVisible(false)}
+      {/* Month Dropdown */}
+      {monthSelectorVisible && (
+        <View style={styles.monthDropdown}>
+          {months.map((m, idx) => (
+            <Pressable
+              key={m}
+              style={[styles.monthItem, selectedMonthIndex === idx && { backgroundColor: '#eef' }]}
+              onPress={() => {
+                setSelectedMonthIndex(idx);
+                setSelectedDay(1);
+                setMonthSelectorVisible(false);
+              }}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Add Appointment</Text>
-
-                        <View style={styles.rowInput}>
-                            <TextInput style={styles.input} placeholder="Name" />
-                            <TextInput style={styles.input} placeholder="Email" />
-                        </View>
-                        <View style={styles.rowInput}>
-                            <TextInput style={styles.input} placeholder="Medical ID" />
-                            <TextInput style={styles.input} placeholder="Address" />
-                        </View>
-                        <View style={styles.rowInput}>
-                            <TextInput style={styles.input} placeholder="Mobile Number" />
-                            <TextInput style={styles.input} placeholder="Problem" />
-                        </View>
-                        <TextInput style={[styles.input, { width: '100%' }]} placeholder="About Patient" />
-
-                        <Pressable style={styles.submitBtn} onPress={() => setModalVisible(false)}>
-                            <Text style={{ color: '#fff' }}>Add</Text>
-                        </Pressable>
-
-                        <Pressable onPress={() => setModalVisible(false)} style={styles.closeBtn}>
-                            <Feather name="x" size={20} color="#333" />
-                        </Pressable>
-                    </View>
-                </View>
-            </Modal>
+              <Text>{m}</Text>
+            </Pressable>
+          ))}
         </View>
-    );
+      )}
+
+      {/* Day Scroll */}
+      <View style={{ marginBottom: 16 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {monthDates.map((item) => (
+            <Pressable
+              key={item.day}
+              onPress={() => setSelectedDay(item.day)}
+              style={[styles.dayItem, item.day === selectedDay && styles.activeDay]}
+            >
+              <Text style={[styles.dayLabel, item.day === selectedDay && { color: '#fff' }]}>{item.label}</Text>
+              <Text style={[styles.dayNumber, item.day === selectedDay && { color: '#fff' }]}>{item.day}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Appointments Grid */}
+      <ScrollView contentContainerStyle={styles.appointmentScroll}>
+        <View style={styles.appointmentBox}>
+          <View style={styles.grid}>
+            {appointments.map((item: any, index: number) => (
+              <View key={index} style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <Image source={{ uri: item.doctor_image }} style={styles.avatar} />
+                  <View>
+                    <Text style={styles.name}>{item.patient_name}</Text>
+                    <Text style={styles.id}>#{item.id}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.table}>
+                  <View style={styles.tableCell}>
+                    <Feather name="activity" size={14} color="#2f3c7e" />
+                    <Text style={styles.info}>{item.patient_problem}</Text>
+                  </View>
+                  <View style={styles.tableCell}>
+                    <Feather name="user" size={14} color="#2f3c7e" />
+                    <Text style={styles.info}>{item.doctor_name}</Text>
+                  </View>
+                  <View style={styles.tableCell}>
+                    <Feather name="calendar" size={14} color="#2f3c7e" />
+                    <Text style={styles.info}>{item.appointment_date}</Text>
+                  </View>
+                  <View style={styles.tableCell}>
+                    <Feather name="clock" size={14} color="#2f3c7e" />
+                    <Text style={styles.info}>{item.appointment_time}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Modal Add (Static UI only for now) */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add Appointment</Text>
+
+            <View style={styles.rowInput}>
+              <TextInput style={styles.input} placeholder="Name" />
+              <TextInput style={styles.input} placeholder="Email" />
+            </View>
+            <View style={styles.rowInput}>
+              <TextInput style={styles.input} placeholder="Medical ID" />
+              <TextInput style={styles.input} placeholder="Address" />
+            </View>
+            <View style={styles.rowInput}>
+              <TextInput style={styles.input} placeholder="Mobile Number" />
+              <TextInput style={styles.input} placeholder="Problem" />
+            </View>
+            <TextInput style={[styles.input, { width: '100%' }]} placeholder="About Patient" />
+
+            <Pressable style={styles.submitBtn} onPress={() => setModalVisible(false)}>
+              <Text style={{ color: '#fff' }}>Add</Text>
+            </Pressable>
+
+            <Pressable onPress={() => setModalVisible(false)} style={styles.closeBtn}>
+              <Feather name="x" size={20} color="#333" />
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 }
+
 
 const styles = StyleSheet.create({
     wrapper: {
