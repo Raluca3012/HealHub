@@ -13,6 +13,9 @@
 use App\Patient;
 use Illuminate\Support\Facades\Route;
 
+use App\User;
+use Illuminate\Support\Facades\Hash;
+
 Route::get('/test', function () {
     try {
         $patient = Patient::with(['appointments', 'notes', 'reports'])->first();
@@ -22,6 +25,17 @@ Route::get('/test', function () {
     }
 });
 
+
+
+Route::get('/create-test-user', function () {
+    $user = User::create([
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => Hash::make('password123'),
+    ]);
+
+    return response()->json(['message' => 'User created', 'user' => $user]);
+});
 
 Route::get('/', function () {
     return view('welcome');

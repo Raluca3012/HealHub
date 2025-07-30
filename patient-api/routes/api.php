@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\AppointmentController;
-
+use App\Http\Controllers\Auth\LoginController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -34,6 +34,7 @@ Route::get('/gender-distribution', [PatientController::class, 'genderDistributio
 Route::get('/appointments/by-date/{date}', [AppointmentController::class, 'getByDate']);
 
 
+Route::post('/login', [LoginController::class, 'apiLogin']);
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();

@@ -1,6 +1,8 @@
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DashboardNavbar from '../../components/dashboard/DashboardNavbar';
+import { useAuth } from '../contexts/AuthContext';
+
 
 const menuItems = [
   { label: 'Dashboard', route: '.' },
@@ -15,7 +17,10 @@ const menuItems = [
 export default function Layout() {
   const router = useRouter();
   const segments = useSegments();
-  const current = segments[1] || '.';
+  const current = segments[2] || '.';
+  const { token, logout } = useAuth();
+
+  if (!token) return null;
 
   return (
     <View style={styles.container}>
