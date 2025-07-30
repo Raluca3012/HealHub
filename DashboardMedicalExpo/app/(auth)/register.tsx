@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+// app/(auth)/register.tsx
+
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function Register() {
   const router = useRouter();
@@ -10,76 +12,61 @@ export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!name || !surname || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill all fields');
+      setError('Please fill all fields');
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
 
-    Alert.alert('Success', `Registered ${name} ${surname}`);
-    router.push('/login');
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, surname, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || 'Registration failed');
+        return;
+      }
+
+      Alert.alert('Success', 'Account created');
+      router.push('/login');
+    } catch (err) {
+      setError('Server error');
+    }
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.container}
-    >
-      <Text style={styles.logo}>🏥 RACES</Text>
-      <Text style={styles.title}>Create your account</Text>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
+      <View style={styles.card}>
+        <Text style={styles.logo}>🏥 RACES</Text>
+        <Text style={styles.title}>Create your account</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-        placeholderTextColor="#555"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Surname"
-        value={surname}
-        onChangeText={setSurname}
-        placeholderTextColor="#555"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-        placeholderTextColor="#555"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-        placeholderTextColor="#555"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        placeholderTextColor="#555"
-      />
+        <TextInput style={styles.input} placeholder="Name" value={name} onChangeText={setName} placeholderTextColor="#555" />
+        <TextInput style={styles.input} placeholder="Surname" value={surname} onChangeText={setSurname} placeholderTextColor="#555" />
+        <TextInput style={styles.input} placeholder="Email" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholderTextColor="#555" />
+        <TextInput style={styles.input} placeholder="Password" value={password} onChangeText={setPassword} secureTextEntry placeholderTextColor="#555" />
+        <TextInput style={styles.input} placeholder="Confirm Password" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry placeholderTextColor="#555" />
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <TouchableOpacity onPress={() => router.push('/login')}>
-        <Text style={styles.link}>Already have an account? Login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleRegister}>
+          <Text style={styles.buttonText}>Register</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push('/login')}>
+          <Text style={styles.link}>Already have an account? Login</Text>
+        </TouchableOpacity>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -89,20 +76,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f4f6fa',
     justifyContent: 'center',
-    paddingHorizontal: 32,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#fff',
+    padding: 32,
+    borderRadius: 16,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
   },
   logo: {
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#2F3C7E',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 4,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 24,
+    fontSize: 18,
+    fontWeight: '500',
     textAlign: 'center',
+    marginBottom: 20,
     color: '#2F3C7E',
   },
   input: {
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#ccc',
     color: '#000',
@@ -121,7 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   buttonText: {
     color: '#fff',
@@ -131,7 +130,12 @@ const styles = StyleSheet.create({
   link: {
     color: '#2F3C7E',
     textAlign: 'center',
-    fontSize: 16,
+    fontSize: 14,
     textDecorationLine: 'underline',
+  },
+  error: {
+    color: 'red',
+    textAlign: 'center',
+    marginBottom: 8,
   },
 });

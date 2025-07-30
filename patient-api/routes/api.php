@@ -7,6 +7,10 @@ use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\StatsController;
 use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Auth\LoginController;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use App\User;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -35,6 +39,48 @@ Route::get('/appointments/by-date/{date}', [AppointmentController::class, 'getBy
 
 
 Route::post('/login', [LoginController::class, 'apiLogin']);
+Route::middleware('auth:api')->post('/logout', function (\Illuminate\Http\Request $request) {
+    $user = $request->user();
+
+    $user->api_token = null;
+    $user->save();
+
+    return response()->json(['message' => 'Logged out successfully']);
+});
+
+Route::post('/register', function (Request $request) {
+    $validator = Validator::make($request->all(), [
+        'name'     => 'required|string|max:255',
+        'surname'  => 'required|string|max:255',
+        'email'    => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:6',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json(['message' => $validator->errors()->first()], 422);
+    }
+
+    $user = User::create([
+        'name'      => $request->name . ' ' . $request->surname,
+        'email'     => $request->email,
+        'password'  => Hash::make($request->password),
+        'role'      => 'receptionist',
+        'api_token' => bin2hex(random_bytes(32)),
+    ]);
+
+    return response()->json([
+        'message' => 'User registered successfully',
+        'token' => $user->api_token,
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+        ]
+    ]);
+});
+
+
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
