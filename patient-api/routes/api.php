@@ -97,3 +97,11 @@ Route::put('/devices/{id}', [DeviceController::class, 'update']);
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+use App\Http\Controllers\Api\UserProfileController;
+
+Route::middleware('auth:api')->group(function () {
+    Route::get('/user-profile', [UserProfileController::class, 'getProfile']);
+    Route::post('/user-profile', [UserProfileController::class, 'updateProfile']);
+});

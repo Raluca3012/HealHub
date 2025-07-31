@@ -25,8 +25,7 @@ class LoginController extends Controller
         if ($user->role !== 'receptionist') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-
-        // Pentru simplitate: token generat și salvat temporar
+        
         $token = bin2hex(random_bytes(32));
         $user->api_token = $token;
         $user->save();
