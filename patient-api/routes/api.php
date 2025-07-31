@@ -10,6 +10,8 @@ use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\User;
+use App\Http\Controllers\Api\DeviceController;
+use App\Http\Controllers\Api\ModelController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,6 +81,16 @@ Route::post('/register', function (Request $request) {
         ]
     ]);
 });
+
+
+Route::get('/devices', [DeviceController::class, 'index']);
+Route::patch('/devices/{id}/status', [DeviceController::class, 'updateStatus']);
+
+Route::get('/models', [ModelController::class, 'index']);
+Route::patch('/models/{id}/status', [ModelController::class, 'updateStatus']);
+
+Route::put('/models/{id}', [ModelController::class, 'update']);
+Route::put('/devices/{id}', [DeviceController::class, 'update']);
 
 
 

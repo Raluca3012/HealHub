@@ -1,23 +1,118 @@
 import { Entypo, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
-const models = [
-  { name: 'evm', description: '' },
-  { name: 'evm', description: '' },
-  { name: 'evm', description: '' },
-];
+interface Model {
+  id: number;
+  name: string;
+  description: string;
+  status: 'approved' | 'pending' | 'suspended';
+}
 
 export default function ModelsScreen() {
+  const [models, setModels] = useState<Model[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedModel, setEditedModel] = useState<{ name: string; description: string }>({
+    name: '',
+    description: '',
+  });
+
   const router = useRouter();
+
+  useEffect(() => {
+    fetchModels();
+  }, []);
+
+  const fetchModels = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/models');
+      const data = await res.json();
+      setModels(data);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to fetch models');
+    }
+  };
+
+  const updateStatus = async (id: number, status: string) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/models/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', `Status updated to ${status}`);
+        setModels((prev) =>
+          prev.map((m) =>
+            m.id === id
+              ? {
+                  ...m,
+                  status: status as 'approved' | 'pending' | 'suspended',
+                }
+              : m
+          )
+        );
+      } else {
+        Alert.alert('Error', data.message || 'Something went wrong');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Server error');
+    }
+  };
+
+  const handleEdit = (model: Model, idx: number) => {
+    setEditingIndex(idx);
+    setEditedModel({ name: model.name, description: model.description });
+  };
+
+  const handleSave = async (id: number) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/models/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedModel),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', 'Model updated');
+        setModels((prev) =>
+          prev.map((m) =>
+            m.id === id
+              ? {
+                  ...m,
+                  ...editedModel,
+                  status: m.status,
+                }
+              : m
+          )
+        );
+        setEditingIndex(null);
+      } else {
+        Alert.alert('Error', data.message || 'Something went wrong');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Server error');
+    }
+  };
 
   return (
     <TouchableWithoutFeedback onPress={() => setOpenIndex(null)}>
@@ -36,35 +131,73 @@ export default function ModelsScreen() {
         </View>
 
         {models.map((model, idx) => (
-          <View key={idx} style={styles.wrapper}>
+          <View key={model.id} style={styles.wrapper}>
             <View style={styles.row}>
-              <Text style={styles.cell}>{model.name}</Text>
-              <Text style={styles.cell}>{model.description}</Text>
+              {editingIndex === idx ? (
+                <>
+                  <TextInput
+                    style={styles.cell}
+                    value={editedModel.name}
+                    onChangeText={(text) => setEditedModel((prev) => ({ ...prev, name: text }))}
+                  />
+                  <TextInput
+                    style={styles.cell}
+                    value={editedModel.description}
+                    onChangeText={(text) => setEditedModel((prev) => ({ ...prev, description: text }))}
+                  />
+                  <Pressable onPress={() => handleSave(model.id)} style={styles.menuButton}>
+                    <Feather name="check" size={18} color="green" />
+                  </Pressable>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.cell}>{model.name}</Text>
+                  <Text style={styles.cell}>{model.description}</Text>
 
-              {openIndex === idx && (
-                <View style={styles.dropdown}>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="eye" size={14} color="green" />
-                    <Text style={[styles.dropdownText, { color: 'green' }]}>View</Text>
-                  </View>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="edit-2" size={14} color="#3b82f6" />
-                    <Text style={[styles.dropdownText, { color: '#3b82f6' }]}>Edit</Text>
-                  </View>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="check-circle" size={14} color="orange" />
-                    <Text style={[styles.dropdownText, { color: 'orange' }]}>Approve</Text>
-                  </View>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="slash" size={14} color="red" />
-                    <Text style={[styles.dropdownText, { color: 'red' }]}>Suspend</Text>
-                  </View>
-                </View>
+                  {editingIndex !== idx && (
+                    <Pressable
+                      onPress={() => setOpenIndex(openIndex === idx ? null : idx)}
+                      style={styles.menuButton}
+                    >
+                      <Entypo name="dots-three-vertical" size={14} color="#444" />
+                    </Pressable>
+                  )}
+
+                  {openIndex === idx && editingIndex !== idx && (
+                    <View style={styles.dropdown}>
+                      <Pressable
+                        onPress={() => {
+                          handleEdit(model, idx);
+                          setOpenIndex(null);
+                        }}
+                        style={styles.dropdownItem}
+                      >
+                        <Feather name="edit-2" size={14} color="#3b82f6" />
+                        <Text style={[styles.dropdownText, { color: '#3b82f6' }]}>Edit</Text>
+                      </Pressable>
+                      <Pressable onPress={() => setOpenIndex(null)} style={styles.dropdownItem}>
+                        <Feather name="eye" size={14} color="green" />
+                        <Text style={[styles.dropdownText, { color: 'green' }]}>View</Text>
+                      </Pressable>
+
+                      <Pressable
+                        onPress={() => updateStatus(model.id, 'approved')}
+                        style={styles.dropdownItem}
+                      >
+                        <Feather name="check-circle" size={14} color="orange" />
+                        <Text style={[styles.dropdownText, { color: 'orange' }]}>Approve</Text>
+                      </Pressable>
+                      <Pressable
+                        onPress={() => updateStatus(model.id, 'suspended')}
+                        style={styles.dropdownItem}
+                      >
+                        <Feather name="slash" size={14} color="red" />
+                        <Text style={[styles.dropdownText, { color: 'red' }]}>Suspend</Text>
+                      </Pressable>
+                    </View>
+                  )}
+                </>
               )}
-
-              <Pressable onPress={() => setOpenIndex(openIndex === idx ? null : idx)} style={styles.menuButton}>
-                <Entypo name="dots-three-vertical" size={14} color="#444" />
-              </Pressable>
             </View>
           </View>
         ))}
@@ -81,7 +214,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginHorizontal: 20,
     overflow: 'visible',
-    zIndex: 0,
+    zIndex: 1,
   },
   tabs: {
     flexDirection: 'row',
@@ -118,7 +251,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     position: 'relative',
-    zIndex: 1000,
+    zIndex: 2,
     flexDirection: 'column',
   },
   row: {
@@ -130,7 +263,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(222, 215, 215, 0.2)',
     alignItems: 'center',
     marginBottom: 8,
-    zIndex: -10,
   },
   cell: {
     flex: 1,
@@ -142,7 +274,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   dropdown: {
-     position: 'absolute',
+    position: 'absolute',
     top: 12,
     right: 40,
     backgroundColor: 'rgba(211,211,211, 0.6)',

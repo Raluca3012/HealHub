@@ -1,24 +1,107 @@
 import { Entypo, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
-const devices = [
-  { id: '102567', mac: '3324', patient: '5' },
-  { id: '102567', mac: '3324', patient: '5' },
-  { id: '102567', mac: '3324', patient: '5' },
-  { id: '102567', mac: '3324', patient: '5' },
-];
+interface Device {
+  id: number;
+  device_id: string;
+  mac_id: string;
+  patient_id: number;
+  model_id: number;
+  status: 'approved' | 'pending' | 'suspended';
+}
 
 export default function DevicesScreen() {
+  const [devices, setDevices] = useState<Device[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedDevice, setEditedDevice] = useState<{ device_id: string; mac_id: string; patient_id: number }>({
+    device_id: '',
+    mac_id: '',
+    patient_id: 0,
+  });
   const router = useRouter();
+
+  useEffect(() => {
+    fetchDevices();
+  }, []);
+
+  const fetchDevices = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/devices');
+      const json = await res.json();
+      setDevices(json);
+    } catch (err) {
+      Alert.alert('Error', 'Failed to fetch devices');
+    }
+  };
+
+  const updateStatus = async (id: number, status: 'approved' | 'pending' | 'suspended') => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/devices/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', `Status updated to ${status}`);
+        setDevices((prev) =>
+          prev.map((d) => (d.id === id ? { ...d, status } : d))
+        );
+      } else {
+        Alert.alert('Error', data.message || 'Something went wrong');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Server error');
+    }
+  };
+
+  const handleEdit = (device: Device, idx: number) => {
+    setEditingIndex(idx);
+    setEditedDevice({ device_id: device.device_id, mac_id: device.mac_id, patient_id: device.patient_id });
+  };
+
+  const handleSave = async (id: number) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/devices/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editedDevice),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert('Success', 'Device updated');
+        setDevices((prev) =>
+          prev.map((d) =>
+            d.id === id ? { ...d, ...editedDevice, status: d.status } : d
+          )
+        );
+        setEditingIndex(null);
+      } else {
+        Alert.alert('Error', data.message || 'Something went wrong');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Server error');
+    }
+  };
 
   return (
     <TouchableWithoutFeedback onPress={() => setOpenIndex(null)}>
@@ -38,37 +121,98 @@ export default function DevicesScreen() {
         </View>
 
         {devices.map((device, idx) => (
-          <View key={idx} style={styles.wrapper}>
+          <View key={device.id} style={styles.wrapper}>
             <View style={styles.row}>
-              <Text style={styles.cell}>{device.id}</Text>
-              <Text style={styles.cell}>{device.mac}</Text>
-              <Text style={styles.cell}>{device.patient}</Text>
+              <View style={styles.cell}>
+                {editingIndex === idx ? (
+                  <TextInput
+                    style={styles.input}
+                    value={editedDevice.device_id}
+                    onChangeText={(text) =>
+                      setEditedDevice((prev) => ({ ...prev, device_id: text }))
+                    }
+                  />
+                ) : (
+                  <Text>{device.device_id}</Text>
+                )}
+              </View>
+              <View style={styles.cell}>
+                {editingIndex === idx ? (
+                  <TextInput
+                    style={styles.input}
+                    value={editedDevice.mac_id}
+                    onChangeText={(text) =>
+                      setEditedDevice((prev) => ({ ...prev, mac_id: text }))
+                    }
+                  />
+                ) : (
+                  <Text>{device.mac_id}</Text>
+                )}
+              </View>
+              <View style={styles.cell}>
+                {editingIndex === idx ? (
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={String(editedDevice.patient_id)}
+                    onChangeText={(text) =>
+                      setEditedDevice((prev) => ({ ...prev, patient_id: parseInt(text) || 0 }))
+                    }
+                  />
+                ) : (
+                  <Text>{device.patient_id}</Text>
+                )}
+              </View>
 
-              {openIndex === idx && (
-                <View style={styles.dropdown}>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="eye" size={14} color="green" />
-                    <Text style={[styles.dropdownText, { color: 'green' }]}>View</Text>
-                  </View>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="edit-2" size={14} color="#3b82f6" />
-                    <Text style={[styles.dropdownText, { color: '#3b82f6' }]}>Edit</Text>
-                  </View>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="check-circle" size={14} color="orange" />
-                    <Text style={[styles.dropdownText, { color: 'orange' }]}>Approve</Text>
-                  </View>
-                  <View style={styles.dropdownItem}>
-                    <Feather name="slash" size={14} color="red" />
-                    <Text style={[styles.dropdownText, { color: 'red' }]}>Suspend</Text>
-                  </View>
-                </View>
+              {editingIndex === idx ? (
+                <Pressable
+                  onPress={() => handleSave(device.id)}
+                  style={styles.menuButton}
+                >
+                  <Feather name="check" size={18} color="green" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={() => setOpenIndex(openIndex === idx ? null : idx)}
+                  style={styles.menuButton}
+                >
+                  <Entypo name="dots-three-vertical" size={14} color="#444" />
+                </Pressable>
               )}
-
-              <Pressable onPress={() => setOpenIndex(openIndex === idx ? null : idx)} style={styles.menuButton}>
-                <Entypo name="dots-three-vertical" size={14} color="#444" />
-              </Pressable>
             </View>
+
+            {openIndex === idx && editingIndex !== idx && (
+              <View style={styles.dropdown}>
+                <Pressable
+                  onPress={() => {
+                    handleEdit(device, idx);
+                    setOpenIndex(null);
+                  }}
+                  style={styles.dropdownItem}
+                >
+                  <Feather name="edit-2" size={14} color="#3b82f6" />
+                  <Text style={[styles.dropdownText, { color: '#3b82f6' }]}>Edit</Text>
+                </Pressable>
+                <Pressable onPress={() => setOpenIndex(null)} style={styles.dropdownItem}>
+                  <Feather name="eye" size={14} color="green" />
+                  <Text style={[styles.dropdownText, { color: 'green' }]}>View</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => updateStatus(device.id, 'approved')}
+                  style={styles.dropdownItem}
+                >
+                  <Feather name="check-circle" size={14} color="orange" />
+                  <Text style={[styles.dropdownText, { color: 'orange' }]}>Approve</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => updateStatus(device.id, 'suspended')}
+                  style={styles.dropdownItem}
+                >
+                  <Feather name="slash" size={14} color="red" />
+                  <Text style={[styles.dropdownText, { color: 'red' }]}>Suspend</Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         ))}
       </View>
@@ -84,7 +228,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginHorizontal: 20,
     overflow: 'visible',
-    zIndex: 0,
+    zIndex: 1,
   },
   tabs: {
     flexDirection: 'row',
@@ -121,7 +265,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     position: 'relative',
-    zIndex: 1000,
+    zIndex: 2,
     flexDirection: 'column',
   },
   row: {
@@ -133,7 +277,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(222, 215, 215, 0.2)',
     alignItems: 'center',
     marginBottom: 8,
-    zIndex: -10,
   },
   cell: {
     flex: 1,
@@ -167,5 +310,15 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontSize: 13,
+  },
+
+  input: {
+    fontSize: 14,
+    color: '#333',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
   },
 });
