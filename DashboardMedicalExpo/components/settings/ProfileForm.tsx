@@ -1,22 +1,18 @@
 import { useAuth } from '@/app/contexts/AuthContext';
 import axios from 'axios';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    Image,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import {
-    Asset,
-    ImageLibraryOptions,
-    launchImageLibrary,
-} from 'react-native-image-picker';
 
-const API_URL = 'http://127.0.0.1:8000/api/user-profile'; // schimbă IP dacă rulezi pe telefon real
+const API_URL = 'http://127.0.0.1:8000/api/user-profile';
 
 interface UserProfile {
   name: string;
@@ -35,7 +31,7 @@ export default function ProfileForm() {
   });
 
   const [editable, setEditable] = useState(false);
-  const [image, setImage] = useState<Asset | null>(null);
+  const [image, setImage] = useState<any>(null);
 
   useEffect(() => {
     if (!token) return;
@@ -51,21 +47,24 @@ export default function ProfileForm() {
       });
   }, [token]);
 
-  const handleChoosePhoto = () => {
-    const options: ImageLibraryOptions = {
-      mediaType: 'photo',
-      quality: 0.7,
-    };
+  const handleChoosePhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permisiune necesară', 'Avem nevoie de acces la galerie');
+      return;
+    }
 
-    launchImageLibrary(options, (response) => {
-      if (response.assets && response.assets.length > 0) {
-        const img = response.assets[0];
-        setImage(img);
-        if (img.uri) {
-          setUser((prev) => ({ ...prev, avatar: img.uri }));
-        }
-      }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 1,
     });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const img = result.assets[0];
+      setImage(img);
+      setUser((prev) => ({ ...prev, avatar: img.uri }));
+    }
   };
 
   const handleSave = async () => {
@@ -74,39 +73,33 @@ export default function ProfileForm() {
     formData.append('phone', user.phone ?? '');
 
     if (image && image.uri) {
-      const fallbackName = image.uri.endsWith('.png') ? 'photo.png' : 'photo.jpg';
-      const fallbackType = image.uri.endsWith('.png') ? 'image/png' : 'image/jpeg';
-
       formData.append('avatar', {
         uri: image.uri,
-        name: image.fileName ?? fallbackName,
-        type: image.type ?? fallbackType,
+        name: 'avatar.jpg',
+        type: 'image/jpeg',
       } as any);
     }
 
     try {
-      await axios.post(API_URL, formData, {
+      const response = await axios.post(API_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
-      Alert.alert('Success', 'Profile updated!');
+
+      setUser(response.data.user); 
+      Alert.alert('Succes');
       setEditable(false);
     } catch (err: any) {
-      if (err.response?.data?.errors) {
-        console.log('Validation errors:', err.response.data.errors);
-        Alert.alert('Validation failed', JSON.stringify(err.response.data.errors));
-      } else {
-        console.log('Other error:', err.response?.data || err);
-        Alert.alert('Error', 'Could not update profile');
-      }
+      console.log(err.response?.data || err);
+      Alert.alert('Error');
     }
   };
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Profile</Text>
+      <Text style={styles.title}>Profil</Text>
       <View style={styles.content}>
         <View style={styles.left}>
           {user.avatar ? (
@@ -116,14 +109,14 @@ export default function ProfileForm() {
           )}
           {editable && (
             <TouchableOpacity onPress={handleChoosePhoto}>
-              <Text style={styles.changePhoto}>📷 Change Photo</Text>
+              <Text style={styles.changePhoto}>📷 Schimbă poza</Text>
             </TouchableOpacity>
           )}
         </View>
 
         <View style={styles.right}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>Nume complet</Text>
             <TextInput
               style={styles.input}
               value={user.name}
@@ -138,7 +131,7 @@ export default function ProfileForm() {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone</Text>
+            <Text style={styles.label}>Telefon</Text>
             <TextInput
               style={styles.input}
               value={user.phone ?? ''}
@@ -152,11 +145,11 @@ export default function ProfileForm() {
               style={styles.changePassword}
               onPress={() => setEditable(true)}
             >
-              <Text style={{ color: '#333' }}>Edit Profile</Text>
+              <Text style={{ color: '#333' }}>Editează profilul</Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={{ color: '#fff' }}>Save Changes</Text>
+              <Text style={{ color: '#fff' }}>Salvează modificările</Text>
             </TouchableOpacity>
           )}
         </View>

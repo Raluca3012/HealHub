@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use App\User;
 use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\ModelController;
+use App\Http\Controllers\Api\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -98,10 +99,29 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::post('/patients/{id}/upload-photo', [PatientController::class, 'updatePhoto']);
 
+Route::get('/notifications/today', 'NotificationController@today');
+
+Route::get('/notifications/week', [NotificationController::class, 'thisWeek']);
 use App\Http\Controllers\Api\UserProfileController;
 
 Route::middleware('auth:api')->group(function () {
     Route::get('/user-profile', [UserProfileController::class, 'getProfile']);
     Route::post('/user-profile', [UserProfileController::class, 'updateProfile']);
 });
+
+Route::get('/appointments/times/{doctor_id}/{date}', [AppointmentController::class, 'takenTimes']);
+
+Route::post('/appointments', [\App\Http\Controllers\Api\AppointmentController::class, 'store']);
+
+
+
+
+Route::options('{any}', function (Request $request) {
+    return response('', 200)
+        ->header('Access-Control-Allow-Origin', '*')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
+})->where('any', '.*');
+

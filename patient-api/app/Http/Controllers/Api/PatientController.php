@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+
 class PatientController extends Controller
 {
     public function show($id)
@@ -186,6 +189,31 @@ public function genderDistribution()
         'female' => $female,
     ]);
 }
+public function updatePhoto(Request $request, $id)
+{
+    $request->validate([
+        'photo' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
 
+    $patient = DB::table('patients')->where('id', $id)->first();
+
+    if (!$patient) {
+        return response()->json(['error' => 'Patient not found'], 404);
+    }
+
+    // Ștergem poza veche dacă există
+    if ($patient->image && str_starts_with($patient->image, 'patients/')) {
+        Storage::disk('public')->delete($patient->image);
+    }
+
+    $path = $request->file('photo')->store('patients', 'public');
+
+    DB::table('patients')->where('id', $id)->update(['image' => $path]);
+
+    return response()->json([
+        'message' => 'Photo updated successfully',
+        'photo_url' => asset('storage/' . $path)
+    ]);
+}
 
 }

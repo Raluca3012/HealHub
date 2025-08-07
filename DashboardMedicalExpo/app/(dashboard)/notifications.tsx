@@ -1,26 +1,48 @@
-import React from 'react';
-import { StyleSheet, View, Text, FlatList } from 'react-native';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 
-const notifications = [
-  { id: '1', title: 'Appointment Reminder', message: 'You have an appointment with Dr. Smith at 3 PM.' },
-  { id: '2', title: 'New Patient Registered', message: 'John Doe has registered as a new patient.' },
-  { id: '3', title: 'Device Alert', message: 'Heart monitor needs calibration.' },
-  { id: '4', title: 'System Update', message: 'Dashboard system update scheduled for tonight.' },
-];
+const API_URL = 'http://127.0.0.1:8000/api/notifications/week';
+
+interface Notification {
+  title: string;
+  message: string;
+}
 
 export default function NotificationsPage() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(API_URL)
+      .then(res => setNotifications(res.data))
+      .catch(err => {
+        console.error('Error loading notifications:', err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" style={{ marginTop: 20 }} />;
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Notifications</Text>
       <FlatList
         data={notifications}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.message}>{item.message}</Text>
           </View>
         )}
+        ListEmptyComponent={
+          <Text style={{ textAlign: 'center', marginTop: 30, color: '#888' }}>
+            Does not exist any notifications for this week.
+          </Text>
+        }
       />
     </View>
   );
@@ -29,6 +51,7 @@ export default function NotificationsPage() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
     backgroundColor: '#f4f6fa',
   },
   header: {

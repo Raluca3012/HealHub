@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Doctor extends Model
 {
     protected $table = 'doctors';
-    
-public function appointments()
-{
-    return $this->hasMany(Appointment::class, 'doctor_id');
-}
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'doctor_id');
+    }
 
 
     public function notes()
@@ -19,11 +19,8 @@ public function appointments()
         return $this->hasMany(Note::class, '_id');
     }
 
-public function reports()
-{
-    return $this->hasMany(Report::class, 'patient_id');
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'patient_id');
+    }
 }
-
-
-}
-
