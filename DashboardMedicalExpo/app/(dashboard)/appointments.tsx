@@ -13,9 +13,8 @@ import {
 } from 'react-native';
 
 const months = [
-  'January', 'February', 'March', 'April',
-  'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December',
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
 const getMonthDates = (year: number, monthIndex: number) => {
@@ -46,17 +45,17 @@ export default function AppointmentsScreen() {
   const [selectedDoctor, setSelectedDoctor] = useState<any | null>(null);
   const [takenTimes, setTakenTimes] = useState<string[]>([]);
   const [formData, setFormData] = useState({
-    appointment_date: '', 
+    appointment_date: '',
     appointment_time: '',
     specialist: '',
   });
 
   const selectedYear = new Date().getFullYear();
   const monthDates = getMonthDates(selectedYear, selectedMonthIndex);
+  const formattedDate = new Date(selectedYear, selectedMonthIndex, selectedDay)
+    .toLocaleDateString('en-CA'); // ✅ fix fus orar
 
   const fetchAppointments = async () => {
-    const formattedDate = new Date(selectedYear, selectedMonthIndex, selectedDay)
-      .toISOString().split('T')[0];
     try {
       const response = await axios.get(`http://127.0.0.1:8000/api/appointments/by-date/${formattedDate}`);
       setAppointments(response.data);
@@ -76,7 +75,7 @@ export default function AppointmentsScreen() {
 
   const fetchDoctors = async () => {
     try {
-      const res = await axios.get(`http://127.0.0.1:8000/api/doctors`);
+      const res = await axios.get('http://127.0.0.1:8000/api/doctors');
       setDoctors(res.data);
     } catch (e) {
       console.error('Error loading doctors', e);
@@ -99,12 +98,10 @@ export default function AppointmentsScreen() {
       ...formData,
       patient_id: selectedPatient.id,
       doctor_id: selectedDoctor.id,
-      specialty: selectedDoctor.specialist, 
+      specialty: selectedDoctor.specialist,
     };
-    await axios.post(`http://127.0.0.1:8000/api/appointments`, payload);
-
     try {
-      await axios.post(`http://127.0.0.1:8000/api/appointments`, payload);
+      await axios.post('http://127.0.0.1:8000/api/appointments', payload);
       setModalVisible(false);
       fetchAppointments();
     } catch (e) {
@@ -112,31 +109,40 @@ export default function AppointmentsScreen() {
     }
   };
 
-  useEffect(() => { fetchAppointments(); }, [selectedDay, selectedMonthIndex]);
-  useEffect(() => { if (modalVisible) { fetchPatients(); fetchDoctors(); } }, [modalVisible]);
-  useEffect(() => { fetchTakenTimes(); }, [selectedDoctor, formData.appointment_date]);
+  useEffect(() => {
+    fetchAppointments();
+  }, [selectedDay, selectedMonthIndex]);
+
+  useEffect(() => {
+    if (modalVisible) {
+      fetchPatients();
+      fetchDoctors();
+    }
+  }, [modalVisible]);
+
+  useEffect(() => {
+    fetchTakenTimes();
+  }, [selectedDoctor, formData.appointment_date]);
 
   const possibleTimes = [
     '08:00:00', '09:00:00', '10:00:00', '11:00:00',
     '12:00:00', '13:00:00', '14:00:00', '15:00:00',
   ];
+
   return (
     <View style={styles.wrapper}>
-      {/* Header */}
       <View style={styles.calendarHeader}>
         <Pressable onPress={() => setMonthSelectorVisible(!monthSelectorVisible)}>
           <Text style={styles.monthLabel}>
             {months[selectedMonthIndex]} <Feather name="chevron-down" size={16} />
           </Text>
         </Pressable>
-
         <Pressable style={styles.addBtn} onPress={() => setModalVisible(true)}>
           <Feather name="plus" size={14} color="#fff" />
           <Text style={{ color: '#fff', marginLeft: 6 }}>Add Appointment</Text>
         </Pressable>
       </View>
 
-      {/* Month Dropdown */}
       {monthSelectorVisible && (
         <View style={styles.monthDropdown}>
           {months.map((m, idx) => (
@@ -155,7 +161,6 @@ export default function AppointmentsScreen() {
         </View>
       )}
 
-      {/* Day Scroll */}
       <View style={{ marginBottom: 16 }}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {monthDates.map((item) => (
@@ -164,14 +169,17 @@ export default function AppointmentsScreen() {
               onPress={() => setSelectedDay(item.day)}
               style={[styles.dayItem, item.day === selectedDay && styles.activeDay]}
             >
-              <Text style={[styles.dayLabel, item.day === selectedDay && { color: '#fff' }]}>{item.label}</Text>
-              <Text style={[styles.dayNumber, item.day === selectedDay && { color: '#fff' }]}>{item.day}</Text>
+              <Text style={[styles.dayLabel, item.day === selectedDay && { color: '#fff' }]}>
+                {item.label}
+              </Text>
+              <Text style={[styles.dayNumber, item.day === selectedDay && { color: '#fff' }]}>
+                {item.day}
+              </Text>
             </Pressable>
           ))}
         </ScrollView>
       </View>
 
-      {/* Appointments Grid */}
       <ScrollView contentContainerStyle={styles.appointmentScroll}>
         <View style={styles.appointmentBox}>
           <View style={styles.grid}>
@@ -184,7 +192,6 @@ export default function AppointmentsScreen() {
                     <Text style={styles.id}>#{item.id}</Text>
                   </View>
                 </View>
-
                 <View style={styles.table}>
                   <View style={styles.tableCell}>
                     <Feather name="activity" size={14} color="#2f3c7e" />
@@ -209,13 +216,16 @@ export default function AppointmentsScreen() {
         </View>
       </ScrollView>
 
-      {/* Modal Add */}
-      <Modal visible={modalVisible} animationType="slide" transparent onRequestClose={() => setModalVisible(false)}>
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setModalVisible(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Appointment</Text>
 
-            {/* Autocomplete patient */}
             <TextInput
               style={styles.input}
               placeholder="Search patient by name"
@@ -227,16 +237,22 @@ export default function AppointmentsScreen() {
             />
             {searchText.length > 0 && !selectedPatient && (
               <ScrollView style={{ maxHeight: 100 }}>
-                {patients.filter(p => p.name.toLowerCase().includes(searchText.toLowerCase())).map(p => (
-                  <Pressable key={p.id} onPress={() => { setSelectedPatient(p); setSearchText(p.name); }}>
-                    <Text>{p.name} (#{p.id})</Text>
-                  </Pressable>
-                ))}
+                {patients
+                  .filter(p => p.name.toLowerCase().includes(searchText.toLowerCase()))
+                  .map(p => (
+                    <Pressable key={p.id} onPress={() => {
+                      setSelectedPatient(p);
+                      setSearchText(p.name);
+                    }}>
+                      <Text>{p.name} (#{p.id})</Text>
+                    </Pressable>
+                  ))}
               </ScrollView>
             )}
-            {selectedPatient && <Text>Selected: {selectedPatient.name} (#{selectedPatient.id})</Text>}
+            {selectedPatient && (
+              <Text>Selected: {selectedPatient.name} (#{selectedPatient.id})</Text>
+            )}
 
-            {/* Doctor autocomplete */}
             <TextInput
               style={styles.input}
               placeholder="Search doctor"
@@ -248,22 +264,22 @@ export default function AppointmentsScreen() {
             />
             {searchDoctor.length > 0 && !selectedDoctor && (
               <ScrollView style={{ maxHeight: 100 }}>
-                {doctors.filter(d => d.name.toLowerCase().includes(searchDoctor.toLowerCase())).map(d => (
-                  <Pressable
-                    key={d.id}
-                    onPress={() => {
+                {doctors
+                  .filter(d => d.name.toLowerCase().includes(searchDoctor.toLowerCase()))
+                  .map(d => (
+                    <Pressable key={d.id} onPress={() => {
                       setSelectedDoctor(d);
                       setSearchDoctor(d.name);
                       setFormData(prev => ({ ...prev, specialist: d.specialist }));
-                    }}
-                  >
-                    <Text>{d.name} (#{d.id})</Text>
-                  </Pressable>
-
-                ))}
+                    }}>
+                      <Text>{d.name} (#{d.id})</Text>
+                    </Pressable>
+                  ))}
               </ScrollView>
             )}
-            {selectedDoctor && <Text>Selected: {selectedDoctor.name} (#{selectedDoctor.id})</Text>}
+            {selectedDoctor && (
+              <Text>Selected: {selectedDoctor.name} (#{selectedDoctor.id})</Text>
+            )}
 
             <TextInput
               style={styles.input}
@@ -276,7 +292,6 @@ export default function AppointmentsScreen() {
               {possibleTimes.map((time) => {
                 const isTaken = Array.isArray(takenTimes) && takenTimes.includes(time);
                 const isSelected = formData.appointment_time === time;
-
                 return (
                   <Pressable
                     key={time}
@@ -287,23 +302,17 @@ export default function AppointmentsScreen() {
                       }
                     }}
                     style={{
-                      backgroundColor: isTaken
-                        ? 'red'
-                        : isSelected
-                          ? '#2f3c7e'
-                          : '#eee',
+                      backgroundColor: isTaken ? 'red' : isSelected ? '#2f3c7e' : '#eee',
                       padding: 10,
                       marginRight: 6,
                       borderRadius: 6,
                       opacity: isTaken ? 0.5 : 1,
                     }}
                   >
-                    <Text
-                      style={{
-                        color: isTaken ? '#fff' : isSelected ? '#fff' : '#000',
-                        fontWeight: isSelected ? 'bold' : 'normal',
-                      }}
-                    >
+                    <Text style={{
+                      color: isTaken ? '#fff' : isSelected ? '#fff' : '#000',
+                      fontWeight: isSelected ? 'bold' : 'normal',
+                    }}>
                       {time}
                     </Text>
                   </Pressable>
@@ -318,11 +327,9 @@ export default function AppointmentsScreen() {
               editable={false}
             />
 
-
             <Pressable style={styles.submitBtn} onPress={handleAppointmentSubmit}>
               <Text style={{ color: '#fff' }}>Add</Text>
             </Pressable>
-
             <Pressable onPress={() => setModalVisible(false)} style={styles.closeBtn}>
               <Feather name="x" size={20} color="#333" />
             </Pressable>

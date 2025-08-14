@@ -54,7 +54,7 @@ class AppointmentController extends Controller
         'specialty' => 'nullable|string|max:255',
     ]);
 
-    dd($validated); // ← ADĂUGĂ ASTA TEMPORAR
+    dd($validated); 
 }
 
 }

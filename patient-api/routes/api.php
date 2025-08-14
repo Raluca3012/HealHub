@@ -101,7 +101,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::post('/patients/{id}/upload-photo', [PatientController::class, 'updatePhoto']);
 
-Route::get('/notifications/today', 'NotificationController@today');
+Route::get('/notifications/today', [NotificationController::class, 'today']);
 
 Route::get('/notifications/week', [NotificationController::class, 'thisWeek']);
 use App\Http\Controllers\Api\UserProfileController;

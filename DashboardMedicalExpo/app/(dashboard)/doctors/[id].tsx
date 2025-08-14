@@ -131,17 +131,36 @@ export default function DoctorViewScreen() {
 
                     <View style={styles.patientContainer}>
                         <Text style={styles.sectionTitle}>Recent Patients</Text>
-                        {patients.map((p) => (
-                            <View key={p.id} style={styles.patientCard}>
-                                <Image source={{ uri: p.image }} style={styles.avatar} />
-                                <View>
-                                    <Text style={styles.cardName}>{p.name}</Text>
-                                    <Text>{p.problem}</Text>
-                                    <Text style={styles.cardSub}>{p.address}</Text>
+
+                        {appointments
+                            .filter(appt => {
+                                const apptDateTime = new Date(`${appt.appointment_date}T${appt.appointment_time}`);
+                                const now = new Date();
+                                return (
+                                    apptDateTime < now &&
+                                    apptDateTime.getMonth() === now.getMonth() &&
+                                    apptDateTime.getFullYear() === now.getFullYear()
+                                );
+                            })
+                            .reduce((acc: Appointment[], current) => {
+                                if (!acc.find(a => a.patient_name === current.patient_name)) {
+                                    acc.push(current);
+                                }
+                                return acc;
+                            }, [])
+                            .map(appt => (
+                                <View key={appt.id} style={styles.patientCard}>
+                                    <Image source={{ uri: appt.patient_image }} style={styles.avatar} />
+                                    <View>
+                                        <Text style={styles.cardName}>{appt.patient_name}</Text>
+                                        <Text>{appt.patient_problem}</Text>
+                                        <Text style={styles.cardSub}>Visited on {new Date(appt.appointment_date).toLocaleDateString()}</Text>
+                                    </View>
                                 </View>
-                            </View>
-                        ))}
+                            ))
+                        }
                     </View>
+
 
                     <View style={styles.reviewContainer}>
                         <Text style={styles.sectionTitle}>Patients Reviews</Text>

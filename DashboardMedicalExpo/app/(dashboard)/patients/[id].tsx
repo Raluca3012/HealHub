@@ -226,26 +226,48 @@ export default function PatientViewScreen() {
             <View style={styles.gridBottom}>
                 <View style={styles.cardAppointments}>
                     <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
-                    {appointments.length > 0 ? appointments.map((appt) => (
-                        <View key={appt.id} style={styles.appointmentRow}>
-                            <Image
-                                source={{ uri: appt.doctor_image || 'https://via.placeholder.com/80' }}
-                                style={styles.profileImage}
-                            />
-                            <View style={{ flex: 1, marginLeft: 40 }}>
-                                <Text style={styles.detail}>{appt.doctor_name || 'Unavailable'}</Text>
-                                <Text style={{ color: '#888' }}>{appt.doctor_specialty || 'Unknown'}</Text>
+                    {appointments
+                        .filter((appt) => {
+                            const apptDateTime = new Date(`${appt.appointment_date}T${appt.appointment_time}`);
+                            return apptDateTime > new Date();
+                        })
+                        .sort((a, b) => {
+                            const aTime = new Date(`${a.appointment_date}T${a.appointment_time}`);
+                            const bTime = new Date(`${b.appointment_date}T${b.appointment_time}`);
+                            return aTime.getTime() - bTime.getTime();
+                        })
+                        .map((appt) => (
+                            <View key={appt.id} style={styles.appointmentRow}>
+                                <Image
+                                    source={{ uri: appt.doctor_image || 'https://via.placeholder.com/80' }}
+                                    style={styles.profileImage}
+                                />
+                                <View style={{ flex: 1, marginLeft: 40 }}>
+                                    <Text style={styles.detail}>{appt.doctor_name || 'Unavailable'}</Text>
+                                    <Text style={{ color: '#888' }}>{appt.doctor_specialty || 'Unknown'}</Text>
+                                </View>
+                                <View style={styles.dateBox}>
+                                    <Text style={styles.dateText}>
+                                        {new Date(appt.appointment_date).toLocaleDateString('en-GB', {
+                                            weekday: 'short',
+                                            day: '2-digit',
+                                            month: 'short',
+                                        })}
+                                    </Text>
+                                </View>
+                                <View style={styles.timeBox}>
+                                    <Text style={styles.timeText}>{appt.appointment_time?.slice(0, 5)}</Text>
+                                </View>
                             </View>
-                            <View style={styles.dateBox}>
-                                <Text style={styles.dateText}>
-                                    {new Date(appt.appointment_date).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}
-                                </Text>
-                            </View>
-                            <View style={styles.timeBox}>
-                                <Text style={styles.timeText}>{appt.appointment_time?.slice(0, 5)}</Text>
-                            </View>
-                        </View>
-                    )) : <Text>No upcoming appointments.</Text>}
+                        ))
+                    }
+                    {appointments.filter((appt) => {
+                        const apptDateTime = new Date(`${appt.appointment_date}T${appt.appointment_time}`);
+                        return apptDateTime > new Date();
+                    }).length === 0 && (
+                            <Text>No upcoming appointments.</Text>
+                        )}
+
 
                 </View>
 
