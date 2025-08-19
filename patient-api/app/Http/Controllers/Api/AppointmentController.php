@@ -13,25 +13,27 @@ use Illuminate\Support\Facades\DB;
 class AppointmentController extends Controller
 {
     public function getByDate($date)
-    {
-        $appointments = DB::table('appointments')
-            ->join('patients', 'appointments.patient_id', '=', 'patients.id')
-            ->join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
-            ->whereDate('appointments.appointment_date', $date)
-            ->orderBy('appointments.appointment_time', 'asc')
-            ->select(
-                'patients.name as patient_name',
-                'patients.problem as patient_problem',
-                'doctors.name as doctor_name',
-                'doctors.image as doctor_image',
-                'appointments.appointment_date',
-                'appointments.appointment_time',
-                'appointments.id'
-            )
-            ->get();
+{
+    $appointments = DB::table('appointments')
+        ->join('patients', 'appointments.patient_id', '=', 'patients.id')
+        ->join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
+        ->whereDate('appointments.appointment_date', $date)
+        ->orderBy('appointments.appointment_time', 'asc')
+        ->select(
+            'patients.name as patient_name',
+            'patients.problem as patient_problem',
+            'patients.image as patient_image', 
+            'doctors.name as doctor_name',
+            'doctors.image as doctor_image',
+            'appointments.appointment_date',
+            'appointments.appointment_time',
+            'appointments.id'
+        )
+        ->get();
 
-        return response()->json($appointments);
-    }
+    return response()->json($appointments);
+}
+
 
     public function takenTimes($doctor_id, $date)
     {

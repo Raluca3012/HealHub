@@ -28,13 +28,18 @@ export default function TopDoctorsList() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
-  fetch('http://localhost:8000/api/doctors/top-rated')
-    .then(res => res.json())
-    .then(data => setDoctors(data))
-    .catch(console.error);
-}, []);
+  // ✅ Format image from storage
+  const formatImageUrl = (path?: string): string => {
+    if (!path) return 'https://via.placeholder.com/80';
+    return path.startsWith('http') ? path : `http://localhost:8000/storage/${path}`;
+  };
 
+  useEffect(() => {
+    fetch('http://localhost:8000/api/doctors/top-rated')
+      .then(res => res.json())
+      .then(data => setDoctors(data))
+      .catch(console.error);
+  }, []);
 
   const showMenu = (event: GestureResponderEvent, doctor: Doctor) => {
     const { pageX, pageY } = event.nativeEvent;
@@ -48,16 +53,15 @@ export default function TopDoctorsList() {
     setSelectedDoctor(null);
   };
 
-const handleViewDoctor = () => {
-  if (selectedDoctor) {
-    router.push({
-      pathname: '/(dashboard)/doctors/[id]',
-      params: { id: String(selectedDoctor.id) },
-    });
-    hideMenu();
-  }
-};
-
+  const handleViewDoctor = () => {
+    if (selectedDoctor) {
+      router.push({
+        pathname: '/(dashboard)/doctors/[id]',
+        params: { id: String(selectedDoctor.id) },
+      });
+      hideMenu();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -65,7 +69,7 @@ const handleViewDoctor = () => {
       {doctors.map((doc) => (
         <View key={doc.id} style={styles.doctorRow}>
           <View style={styles.left}>
-            <Image source={{ uri: doc.image }} style={styles.avatar} />
+            <Image source={{ uri: formatImageUrl(doc.image) }} style={styles.avatar} />
             <View>
               <Text style={styles.name}>{doc.name}</Text>
               <Text style={styles.specialty}>{doc.specialty}</Text>
@@ -85,11 +89,8 @@ const handleViewDoctor = () => {
         <Modal transparent animationType="fade" visible={menuVisible}>
           <TouchableWithoutFeedback onPress={hideMenu}>
             <View style={styles.overlay}>
-              <View style={[styles.dropdown, { top: menuPos.y, left: menuPos.x - 70 }]} >
-                <Pressable
-                  style={styles.dropdownItem}
-                  onPress={handleViewDoctor}
-                >
+              <View style={[styles.dropdown, { top: menuPos.y, left: menuPos.x - 70 }]}>
+                <Pressable style={styles.dropdownItem} onPress={handleViewDoctor}>
                   <Feather name="eye" size={14} color="green" />
                   <Text style={[styles.dropdownText, { color: 'green' }]}>View</Text>
                 </Pressable>
@@ -101,8 +102,6 @@ const handleViewDoctor = () => {
     </View>
   );
 }
-
-
 
 const styles = StyleSheet.create({
   container: {

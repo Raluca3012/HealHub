@@ -10,9 +10,8 @@ import {
   Text,
   TextInput,
   TouchableWithoutFeedback,
-  View
+  View,
 } from 'react-native';
-
 
 export default function DoctorsScreen() {
   const router = useRouter();
@@ -39,8 +38,8 @@ export default function DoctorsScreen() {
     return isNaN(date.getTime())
       ? '-'
       : `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1)
-        .toString()
-        .padStart(2, '0')}/${date.getFullYear()}`;
+          .toString()
+          .padStart(2, '0')}/${date.getFullYear()}`;
   };
 
   const showMenu = (event: any, doctor: any) => {
@@ -51,6 +50,11 @@ export default function DoctorsScreen() {
   const hideMenu = () => {
     setMenuPos(null);
     setSelectedDoctor(null);
+  };
+
+  const formatImageUrl = (path?: string) => {
+    if (!path) return 'https://via.placeholder.com/80';
+    return path.startsWith('http') ? path : `http://localhost:8000/storage/${path}`;
   };
 
   return (
@@ -79,7 +83,7 @@ export default function DoctorsScreen() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.row}>
-            <Image source={{ uri: item.image }} style={styles.avatar} />
+            <Image source={{ uri: formatImageUrl(item.image) }} style={styles.avatar} />
             <Text style={[styles.cell, styles.nameText]}>{item.name}</Text>
             <Text style={styles.cell}>#NP-{String(item.id).padStart(8, '0')}</Text>
             <Text style={styles.cell}>{formatDate(item.joining)}</Text>

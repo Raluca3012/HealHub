@@ -10,299 +10,263 @@ import {
 } from 'react-native';
 
 interface Patient {
-    id: number;
-    name: string;
-    gender: string;
-    image: string;
-    checkin: string;
-    mobile: string;
-    email: string;
-    address: string;
-    doctor_name: string;
-    problem: string;
-    room: string;
-    status: string;
-    created_at: string;
+  id: number;
+  name: string;
+  gender: string;
+  image: string;
+  photo_url: string;
+  checkin: string;
+  mobile: string;
+  email: string;
+  address: string;
+  doctor_name: string;
+  problem: string;
+  room: string;
+  status: string;
+  created_at: string;
 }
 
 interface Note {
-    id: number;
-    patient_id: number;
-    content: string;
-    author: string;
-    created_at: string;
-    doctor_name: string;
-    note_date: string;
+  id: number;
+  patient_id: number;
+  content: string;
+  author: string;
+  created_at: string;
+  doctor_name: string;
+  note_date: string;
 }
 
 interface Report {
-    id: number;
-    patient_id: number;
-    type: string;
-    value: number;
-    test_type: 'EEG' | 'FNIRS';
+  id: number;
+  patient_id: number;
+  type: string;
+  value: number;
+  test_type: 'EEG' | 'FNIRS';
 }
 
 interface Appointment {
-    id: number;
-    appointment_date: string;
-    appointment_time: string;
-    doctor_id: number;
-    patient_id: number;
-    specialty: string;
-
-    doctor_name?: string;
-    doctor_email?: string;
-    doctor_phone?: string;
-    doctor_specialty?: string;
-    doctor_image?: string;
+  id: number;
+  appointment_date: string;
+  appointment_time: string;
+  doctor_id: number;
+  patient_id: number;
+  specialty: string;
+  doctor_name?: string;
+  doctor_email?: string;
+  doctor_phone?: string;
+  doctor_specialty?: string;
+  doctor_image?: string;
 }
 
-
 interface Doctor {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    image: string;
-    specialty: string;
-    experience: number;
-    average_rating?: number;
-    review_comment?: string;
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  image: string;
+  photo_url: string;
+  specialty: string;
+  experience: number;
+  average_rating?: number;
+  review_comment?: string;
 }
 
 export default function PatientViewScreen() {
-    const { id } = useLocalSearchParams();
-    const router = useRouter();
+  const { id } = useLocalSearchParams();
+  const router = useRouter();
 
-    const [patient, setPatient] = useState<Patient | null>(null);
-    const [doctor, setDoctor] = useState<Doctor | null>(null);
-    const [notes, setNotes] = useState<Note[]>([]);
-    const [reports, setReports] = useState<Report[]>([]);
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
-    const [activeTab, setActiveTab] = useState<'EEG' | 'FNIRS'>('EEG');
-    const [rating, setRating] = useState<number | null>(null);
-    const [ratingCount, setRatingCount] = useState<number>(0);
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [activeTab, setActiveTab] = useState<'EEG' | 'FNIRS'>('EEG');
+  const [rating, setRating] = useState<number | null>(null);
+  const [ratingCount, setRatingCount] = useState<number>(0);
+  const [showAllNotes, setShowAllNotes] = useState(false);
 
-    const [showAllNotes, setShowAllNotes] = useState(false);
+  const formatImageUrl = (path?: string): string => {
+    if (!path) return 'https://via.placeholder.com/80';
+    return path.startsWith('http') ? path : `http://localhost:8000/storage/${path}`;
+  };
 
+  useEffect(() => {
+    fetch(`http://localhost:8000/api/patient/${id}/details`)
+      .then((response) => response.json())
+      .then((data) => {
+        setPatient(data.patient);
+        setDoctor({
+          ...data.doctor,
+          experience: data.doctor.experience ?? data.doctor.experience_years ?? 0,
+        });
+        setNotes(data.notes);
+        setReports(data.reports);
+        setAppointments(data.appointments);
+        setRating(parseFloat(data.rating) || 0);
+        setRatingCount(data.rating_count || 0);
+      })
+      .catch((error) => console.error('Error loading patient details:', error));
+  }, [id]);
 
-    useEffect(() => {
-        fetch(`http://localhost:8000/api/patient/${id}/details`)
-            .then((response) => response.json())
-            .then((data) => {
-                setPatient(data.patient);
-                setDoctor({
-                    ...data.doctor,
-                    experience: data.doctor.experience ?? data.doctor.experience_years ?? 0,
-                });
+  if (!patient) return <Text style={styles.loading}>Loading...</Text>;
 
-                setNotes(data.notes);
-                setReports(data.reports);
+  return (
+    <ScrollView style={styles.container}>
+      <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <Text style={styles.backButtonText}>{'<'} Back</Text>
+      </TouchableOpacity>
 
-                setAppointments(data.appointments);
+      <View style={styles.gridTop}>
+        {/* Patient Card */}
+        <View style={styles.headerCard}>
+          <View style={styles.profileRow}>
+            <Image source={{ uri: patient.photo_url }} style={styles.profileImage} />
+            <Text style={styles.name}>{patient.name}</Text>
+          </View>
+          <View style={styles.detailsGrid}>
+            <View style={styles.detailItem}><Text style={styles.label}>Mobile Number</Text><Text style={styles.value}>{patient.mobile}</Text></View>
+            <View style={styles.detailItem}><Text style={styles.label}>Problem</Text><Text style={styles.value}>{patient.problem}</Text></View>
+            <View style={styles.detailItem}><Text style={styles.label}>Gender</Text><Text style={styles.value}>{patient.gender}</Text></View>
+            <View style={styles.detailItem}><Text style={styles.label}>Patient Status</Text><Text style={styles.value}>{patient.status}</Text></View>
+            <View style={styles.detailItem}><Text style={styles.label}>Email Address</Text><Text style={styles.value}>{patient.email}</Text></View>
+            <View style={styles.detailItem}><Text style={styles.label}>Address</Text><Text style={styles.value}>{patient.address}</Text></View>
+          </View>
+        </View>
 
-                setRating(parseFloat(data.rating) || 0);
-                setRatingCount(data.rating_count || 0);
-            })
-            .catch((error) => console.error('Error loading patient details:', error));
-    }, [id]);
+        {/* Notes */}
+        <View style={styles.cardNotes}>
+          <View style={styles.notesHeader}>
+            <Text style={styles.sectionTitle}>Notes</Text>
+            {notes.length > 1 && (
+              <TouchableOpacity onPress={() => setShowAllNotes(!showAllNotes)}>
+                <Text style={styles.seeAll}>{showAllNotes ? 'Show less' : 'See all'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
 
-
-
-
-    if (!patient) return <Text style={styles.loading}>Loading...</Text>;
-
-    return (
-        <ScrollView style={styles.container}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Text style={styles.backButtonText}>{'<'} Back</Text>
-            </TouchableOpacity>
-
-            <View style={styles.gridTop}>
-                {/* Patient Card */}
-                <View style={styles.headerCard}>
-                    <View style={styles.profileRow}>
-                        <Image source={{ uri: patient.image || '...' }} style={styles.profileImage} />
-                        <Text style={styles.name}>{patient.name}</Text>
-                    </View>
-                    <View style={styles.detailsGrid}>
-                        <View style={styles.detailItem}><Text style={styles.label}>Mobile Number</Text><Text style={styles.value}>{patient.mobile}</Text></View>
-                        <View style={styles.detailItem}><Text style={styles.label}>Problem</Text><Text style={styles.value}>{patient.problem}</Text></View>
-                        <View style={styles.detailItem}><Text style={styles.label}>Gender</Text><Text style={styles.value}>{patient.gender}</Text></View>
-                        <View style={styles.detailItem}><Text style={styles.label}>Patient Status</Text><Text style={styles.value}>{patient.status}</Text></View>
-                        <View style={styles.detailItem}><Text style={styles.label}>Email Address</Text><Text style={styles.value}>{patient.email}</Text></View>
-                        <View style={styles.detailItem}><Text style={styles.label}>Address</Text><Text style={styles.value}>{patient.address}</Text></View>
-                    </View>
+          {showAllNotes ? (
+            notes.map((note, index) => (
+              <View key={note.id} style={styles.noteBox}>
+                <Text style={styles.noteContent}>{note.content}</Text>
+                <Text style={styles.noteMeta}>
+                  Note {index + 1} • <Text style={{ fontWeight: 'bold', color: '#2F3C7E' }}>{note.doctor_name}</Text> •{' '}
+                  {new Date(note.note_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </Text>
+              </View>
+            ))
+          ) : (
+            notes[0] && (
+              <>
+                <View style={styles.noteBox}>
+                  <Text style={styles.noteContent}>{notes[0].content}</Text>
                 </View>
+                <Text style={styles.noteMeta}>
+                  Note 1 • <Text style={{ fontWeight: 'bold', color: '#2F3C7E' }}>{notes[0].doctor_name}</Text> •{' '}
+                  {new Date(notes[0].note_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                </Text>
+              </>
+            )
+          )}
+        </View>
 
-                {/* Notes */}
-                <View style={styles.cardNotes}>
-                    <View style={styles.notesHeader}>
-                        <Text style={styles.sectionTitle}>Notes</Text>
-                        {notes.length > 1 && (
-                            <TouchableOpacity onPress={() => setShowAllNotes(!showAllNotes)}>
-                                <Text style={styles.seeAll}>{showAllNotes ? 'Show less' : 'See all'}</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
-
-                    {showAllNotes ? (
-                        notes.map((note, index) => (
-                            <View key={note.id} style={styles.noteBox}>
-                                <Text style={styles.noteContent}>{note.content}</Text>
-                                <Text style={styles.noteMeta}>
-                                    Note {index + 1} •{' '}
-                                    <Text style={{ fontWeight: 'bold', color: '#2F3C7E' }}>{note.doctor_name}</Text> •{' '}
-                                    {new Date(note.note_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                </Text>
-                            </View>
-                        ))
-                    ) : (
-                        notes[0] && (
-                            <>
-                                <View style={styles.noteBox}>
-                                    <Text style={styles.noteContent}>{notes[0].content}</Text>
-                                </View>
-                                <Text style={styles.noteMeta}>
-                                    Note 1 •{' '}
-                                    <Text style={{ fontWeight: 'bold', color: '#2F3C7E' }}>{notes[0].doctor_name}</Text> •{' '}
-                                    {new Date(notes[0].note_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                </Text>
-                            </>
-                        )
-                    )}
-                </View>
-
-
-                {/* Doctor Info */}
-                <View style={styles.cardDoctor}>
-                    <Text style={styles.sectionTitle}>Assigned Doctor</Text>
-
-                    <View style={styles.doctorHeader}>
-                        <Image
-                            source={{ uri: doctor?.image || 'https://via.placeholder.com/80' }}
-                            style={styles.doctorImage}
-                        />
-                        <View>
-                            <Text style={styles.doctorName}>{doctor?.name}</Text>
-                            {(ratingCount ?? 0) > 0 && rating !== null ? (
-                                <Text style={styles.ratingText}>
-                                    ⭐ {rating.toFixed(1)} ({ratingCount})
-                                </Text>
-                            ) : (
-                                <Text style={styles.ratingText}>⭐ No ratings</Text>
-                            )}
-
-
-
-
-                        </View>
-                    </View>
-
-                    <View style={styles.iconDetail}>
-                        <Text style={styles.iconLabel}>📧 Email Address</Text>
-                        <Text style={styles.detail}>{doctor?.email}</Text>
-                    </View>
-                    <View style={styles.iconDetail}>
-                        <Text style={styles.iconLabel}>📞 Phone Number</Text>
-                        <Text style={styles.detail}>+91 {doctor?.phone}</Text>
-                    </View>
-                    <View style={styles.iconDetail}>
-                        <Text style={styles.iconLabel}>🩺 Speciality</Text>
-                        <Text style={styles.detail}>{doctor?.specialty}</Text>
-                    </View>
-                    <View style={styles.iconDetail}>
-                        <Text style={styles.iconLabel}>💼Work Experience</Text>
-                        <Text style={styles.detail}>{doctor?.experience || 'N/A'} Years</Text>
-
-                    </View>
-                </View>
-
-
+        {/* Assigned Doctor */}
+        <View style={styles.cardDoctor}>
+          <Text style={styles.sectionTitle}>Assigned Doctor</Text>
+          <View style={styles.doctorHeader}>
+            <Image
+              source={{ uri: formatImageUrl(doctor?.image) }}
+              style={styles.doctorImage}
+            />
+            <View>
+              <Text style={styles.doctorName}>{doctor?.name}</Text>
+              {(ratingCount ?? 0) > 0 && rating !== null ? (
+                <Text style={styles.ratingText}>
+                  ⭐ {rating.toFixed(1)} ({ratingCount})
+                </Text>
+              ) : (
+                <Text style={styles.ratingText}>⭐ No ratings</Text>
+              )}
             </View>
+          </View>
 
-            {/* Appointments + Reports */}
-            <View style={styles.gridBottom}>
-                <View style={styles.cardAppointments}>
-                    <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
-                    {appointments
-                        .filter((appt) => {
-                            const apptDateTime = new Date(`${appt.appointment_date}T${appt.appointment_time}`);
-                            return apptDateTime > new Date();
-                        })
-                        .sort((a, b) => {
-                            const aTime = new Date(`${a.appointment_date}T${a.appointment_time}`);
-                            const bTime = new Date(`${b.appointment_date}T${b.appointment_time}`);
-                            return aTime.getTime() - bTime.getTime();
-                        })
-                        .map((appt) => (
-                            <View key={appt.id} style={styles.appointmentRow}>
-                                <Image
-                                    source={{ uri: appt.doctor_image || 'https://via.placeholder.com/80' }}
-                                    style={styles.profileImage}
-                                />
-                                <View style={{ flex: 1, marginLeft: 40 }}>
-                                    <Text style={styles.detail}>{appt.doctor_name || 'Unavailable'}</Text>
-                                    <Text style={{ color: '#888' }}>{appt.doctor_specialty || 'Unknown'}</Text>
-                                </View>
-                                <View style={styles.dateBox}>
-                                    <Text style={styles.dateText}>
-                                        {new Date(appt.appointment_date).toLocaleDateString('en-GB', {
-                                            weekday: 'short',
-                                            day: '2-digit',
-                                            month: 'short',
-                                        })}
-                                    </Text>
-                                </View>
-                                <View style={styles.timeBox}>
-                                    <Text style={styles.timeText}>{appt.appointment_time?.slice(0, 5)}</Text>
-                                </View>
-                            </View>
-                        ))
-                    }
-                    {appointments.filter((appt) => {
-                        const apptDateTime = new Date(`${appt.appointment_date}T${appt.appointment_time}`);
-                        return apptDateTime > new Date();
-                    }).length === 0 && (
-                            <Text>No upcoming appointments.</Text>
-                        )}
+          <View style={styles.iconDetail}><Text style={styles.iconLabel}>📧 Email Address</Text><Text style={styles.detail}>{doctor?.email}</Text></View>
+          <View style={styles.iconDetail}><Text style={styles.iconLabel}>📞 Phone Number</Text><Text style={styles.detail}>+91 {doctor?.phone}</Text></View>
+          <View style={styles.iconDetail}><Text style={styles.iconLabel}>🩺 Speciality</Text><Text style={styles.detail}>{doctor?.specialty}</Text></View>
+          <View style={styles.iconDetail}><Text style={styles.iconLabel}>💼 Work Experience</Text><Text style={styles.detail}>{doctor?.experience || 'N/A'} Years</Text></View>
+        </View>
+      </View>
 
-
+      {/* Appointments + Reports */}
+      <View style={styles.gridBottom}>
+        <View style={styles.cardAppointments}>
+          <Text style={styles.sectionTitle}>Upcoming Appointments</Text>
+          {appointments
+            .filter((appt) => new Date(`${appt.appointment_date}T${appt.appointment_time}`) > new Date())
+            .sort((a, b) =>
+              new Date(`${a.appointment_date}T${a.appointment_time}`).getTime() -
+              new Date(`${b.appointment_date}T${b.appointment_time}`).getTime()
+            )
+            .map((appt) => (
+              <View key={appt.id} style={styles.appointmentRow}>
+                <Image
+                  source={{ uri: formatImageUrl(appt.doctor_image) }}
+                  style={styles.profileImage}
+                />
+                <View style={{ flex: 1, marginLeft: 40 }}>
+                  <Text style={styles.detail}>{appt.doctor_name || 'Unavailable'}</Text>
+                  <Text style={{ color: '#888' }}>{appt.doctor_specialty || 'Unknown'}</Text>
                 </View>
-
-                {/* EEG & FNIRS Reports */}
-                <View style={styles.cardChart}>
-                    <View style={styles.tabRow}>
-                        {['EEG', 'FNIRS'].map((tab) => (
-                            <TouchableOpacity
-                                key={tab}
-                                onPress={() => setActiveTab(tab as 'EEG' | 'FNIRS')}
-                                style={[styles.tab, activeTab === tab && styles.activeTab]}
-                            >
-                                <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    <View style={{ paddingTop: 10 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Report - 2024</Text>
-                        {reports
-                            .filter((r) => r.test_type === activeTab)
-                            .map((r, index) => (
-                                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                                    <Text style={{ fontWeight: '600', width: 70 }}>{r.type}</Text>
-                                    <View style={{ flex: 1, marginHorizontal: 12 }}>
-                                        <View style={{ height: 2, backgroundColor: '#333', width: `${Math.min(r.value * 2, 100)}%` }} />
-                                    </View>
-                                    <Text style={{ color: '#4B5563', fontWeight: '500' }}>{r.value} Hz</Text>
-                                </View>
-                            ))}
-                    </View>
+                <View style={styles.dateBox}>
+                  <Text style={styles.dateText}>
+                    {new Date(appt.appointment_date).toLocaleDateString('en-GB', {
+                      weekday: 'short',
+                      day: '2-digit',
+                      month: 'short',
+                    })}
+                  </Text>
                 </View>
-            </View>
-        </ScrollView>
-    );
+                <View style={styles.timeBox}>
+                  <Text style={styles.timeText}>{appt.appointment_time?.slice(0, 5)}</Text>
+                </View>
+              </View>
+            ))}
+          {appointments.filter((appt) =>
+            new Date(`${appt.appointment_date}T${appt.appointment_time}`) > new Date()
+          ).length === 0 && <Text>No upcoming appointments.</Text>}
+        </View>
+
+        {/* EEG & FNIRS Reports */}
+        <View style={styles.cardChart}>
+          <View style={styles.tabRow}>
+            {['EEG', 'FNIRS'].map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActiveTab(tab as 'EEG' | 'FNIRS')}
+                style={[styles.tab, activeTab === tab && styles.activeTab]}
+              >
+                <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <View style={{ paddingTop: 10 }}>
+            <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 10 }}>Report - 2024</Text>
+            {reports
+              .filter((r) => r.test_type === activeTab)
+              .map((r, index) => (
+                <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                  <Text style={{ fontWeight: '600', width: 70 }}>{r.type}</Text>
+                  <View style={{ flex: 1, marginHorizontal: 12 }}>
+                    <View style={{ height: 2, backgroundColor: '#333', width: `${Math.min(r.value * 2, 100)}%` }} />
+                  </View>
+                  <Text style={{ color: '#4B5563', fontWeight: '500' }}>{r.value} Hz</Text>
+                </View>
+              ))}
+          </View>
+        </View>
+      </View>
+    </ScrollView>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -311,8 +275,7 @@ const styles = StyleSheet.create({
     backButtonText: { color: '#2F3C7E', fontWeight: 'bold' },
     gridTop: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 16, marginBottom: 16 },
     headerCard: { flexBasis: '32%', backgroundColor: '#2F3C7E', borderRadius: 12, padding: 20 },
-    //profileImage: { width: 60, height: 60, borderRadius: 40, alignSelf: 'flex-start', },
-    // name: { fontSize: 22, fontWeight: 'bold', color: '#fff', textAlign: 'center', marginTop: 10 },
+
     detailsGrid: { marginTop: 20, flexWrap: 'wrap', flexDirection: 'row', justifyContent: 'space-between' },
     detailItem: { width: '48%', marginBottom: 10 },
     label: { fontWeight: '600', color: '#e0e7ff' },

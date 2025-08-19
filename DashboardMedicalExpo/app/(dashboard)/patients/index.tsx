@@ -41,7 +41,6 @@ export default function PatientsScreen() {
       });
   }, []);
 
-
   const showMenu = (event: any, patient: any) => {
     setMenuPos({ x: event.nativeEvent.pageX, y: event.nativeEvent.pageY });
     setSelectedPatient(patient);
@@ -93,7 +92,7 @@ export default function PatientsScreen() {
         renderItem={({ item }) => (
           <View>
             <View style={styles.row}>
-              <Image source={{ uri: item.image }} style={styles.avatar} />
+              <Image source={{ uri: item.photo_url }} style={styles.avatar} />
               <Text style={[styles.cell, styles.nameText]}>{item.name}</Text>
               <Text style={styles.cell}>#N-{String(item.id).padStart(8, '0')}</Text>
               <Text style={styles.cell}>{item.checkin}</Text>

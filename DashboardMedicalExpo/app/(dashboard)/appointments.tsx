@@ -53,7 +53,7 @@ export default function AppointmentsScreen() {
   const selectedYear = new Date().getFullYear();
   const monthDates = getMonthDates(selectedYear, selectedMonthIndex);
   const formattedDate = new Date(selectedYear, selectedMonthIndex, selectedDay)
-    .toLocaleDateString('en-CA'); // ✅ fix fus orar
+    .toLocaleDateString('en-CA'); 
 
   const fetchAppointments = async () => {
     try {
@@ -125,9 +125,16 @@ export default function AppointmentsScreen() {
   }, [selectedDoctor, formData.appointment_date]);
 
   const possibleTimes = [
-    '08:00:00', '09:00:00', '10:00:00', '11:00:00',
-    '12:00:00', '13:00:00', '14:00:00', '15:00:00',
+    '08:00:00', '08:30:00', '09:00:00', '09:30:00', '10:00:00', '10:30:00',
+    '11:00:00', '11:30:00', '12:00:00', '12:30:00', '13:00:00', '13:30:00',
+    '14:00:00', '14:30:00', '15:00:00',
   ];
+
+  const formatImageUrl = (path: string | undefined): string => {
+    if (!path) return 'https://via.placeholder.com/80';
+    return path.startsWith('http') ? path : `http://localhost:8000/storage/${path}`;
+  };
+
 
   return (
     <View style={styles.wrapper}>
@@ -186,7 +193,7 @@ export default function AppointmentsScreen() {
             {appointments.map((item: any, index: number) => (
               <View key={index} style={styles.card}>
                 <View style={styles.cardHeader}>
-                  <Image source={{ uri: item.doctor_image }} style={styles.avatar} />
+                  <Image source={{ uri: formatImageUrl(item.patient_image) }} style={styles.avatar} />
                   <View>
                     <Text style={styles.name}>{item.patient_name}</Text>
                     <Text style={styles.id}>#{item.id}</Text>
@@ -212,6 +219,7 @@ export default function AppointmentsScreen() {
                 </View>
               </View>
             ))}
+
           </View>
         </View>
       </ScrollView>

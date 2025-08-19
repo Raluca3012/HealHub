@@ -66,6 +66,11 @@ const getWeekDays = (startDate: Date): WeekDay[] => {
     return days;
 };
 
+const formatImageUrl = (path: string | undefined): string => {
+    if (!path) return 'https://via.placeholder.com/80';
+    return path.startsWith('http') ? path : `http://localhost:8000/storage/${path}`;
+};
+
 export default function DoctorViewScreen() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
@@ -84,7 +89,6 @@ export default function DoctorViewScreen() {
     const filteredAppointments = appointments
         .filter(appt => appt.appointment_date.startsWith(selectedDate))
         .sort((a, b) => a.appointment_time.localeCompare(b.appointment_time));
-
 
     useEffect(() => {
         fetch(`http://localhost:8000/api/doctor/${id}/details`)
@@ -126,7 +130,7 @@ export default function DoctorViewScreen() {
                                 <View style={styles.infoItem}><Text style={styles.infoLabel}>🏥 Working at</Text><Text style={styles.infoText}>{doctor.working_at}</Text></View>
                             </View>
                         </View>
-                        <Image source={{ uri: doctor.image }} style={styles.bannerImage} />
+                        <Image source={{ uri: formatImageUrl(doctor.image) }} style={styles.bannerImage} />
                     </View>
 
                     <View style={styles.patientContainer}>
@@ -150,7 +154,7 @@ export default function DoctorViewScreen() {
                             }, [])
                             .map(appt => (
                                 <View key={appt.id} style={styles.patientCard}>
-                                    <Image source={{ uri: appt.patient_image }} style={styles.avatar} />
+                                    <Image source={{ uri: formatImageUrl(appt.patient_image) }} style={styles.avatar} />
                                     <View>
                                         <Text style={styles.cardName}>{appt.patient_name}</Text>
                                         <Text>{appt.patient_problem}</Text>
@@ -161,14 +165,13 @@ export default function DoctorViewScreen() {
                         }
                     </View>
 
-
                     <View style={styles.reviewContainer}>
                         <Text style={styles.sectionTitle}>Patients Reviews</Text>
                         {reviews.map((r) => {
                             const patient = getPatientInfo(r.patient_id);
                             return (
                                 <View key={r.id} style={styles.reviewCard}>
-                                    <Image source={{ uri: patient?.image }} style={styles.avatar} />
+                                    <Image source={{ uri: formatImageUrl(patient?.image) }} style={styles.avatar} />
                                     <View>
                                         <Text style={styles.cardName}>{patient?.name}</Text>
                                         <Text>{r.comment}</Text>
@@ -186,9 +189,8 @@ export default function DoctorViewScreen() {
                             <Text style={styles.headerText}>Doctor's Appointments</Text>
                         </View>
 
-
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.weekScroll}>
-                            {weekDays.map((d: WeekDay, index: number) => (
+                            {weekDays.map((d, index) => (
                                 <Pressable
                                     key={d.date.toDateString()}
                                     onPress={() => setSelectedDayIndex(index)}
@@ -203,7 +205,7 @@ export default function DoctorViewScreen() {
                         <View style={styles.appointmentCard}>
                             {filteredAppointments.map((appt) => (
                                 <View key={appt.id} style={styles.appointmentItem}>
-                                    <Image source={{ uri: appt.patient_image }} style={styles.avatar} />
+                                    <Image source={{ uri: formatImageUrl(appt.patient_image) }} style={styles.avatar} />
                                     <View style={{ flex: 1 }}>
                                         <Text style={styles.cardName}>{appt.patient_name}</Text>
                                         <Text>{appt.patient_problem}</Text>
@@ -231,7 +233,6 @@ export default function DoctorViewScreen() {
         </ScrollView>
     );
 }
-
 
 const styles = StyleSheet.create({
     container: {
