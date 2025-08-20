@@ -53,10 +53,8 @@ class PatientWebController extends Controller
             'address', 'room', 'status', 'doctor_id', 'problem'
         ]);
 
-        // Setează automat checkin-ul cu data curentă
         $data['checkin'] = Carbon::now()->toDateString();
 
-        // Poza pacient
         if ($request->hasFile('photo')) {
             $filename = 'patient_' . time() . '.' . $request->photo->getClientOriginalExtension();
             $path = $request->file('photo')->storeAs('uploads/patients', $filename, 'public');
@@ -90,9 +88,8 @@ class PatientWebController extends Controller
 
         $patient = DB::table('patients')->where('id', $id)->first();
 
-        // Schimbare imagine doar dacă e nouă
         if ($request->hasFile('photo')) {
-            // Ștergem vechea imagine dacă există
+        
             if ($patient && $patient->image) {
                 Storage::disk('public')->delete($patient->image);
             }
@@ -102,7 +99,6 @@ class PatientWebController extends Controller
             $data['image'] = $path;
         }
 
-        // Nu actualizăm checkin-ul, îl păstrăm pe cel vechi
         DB::table('patients')->where('id', $id)->update($data);
 
         return redirect()->route('patients.index')->with('success', 'Patient updated successfully.');

@@ -45,7 +45,6 @@ export default function ProfileForm() {
   const [image, setImage] = useState<any>(null);
   const [editable, setEditable] = useState(false);
 
-  // input file ascuns pentru web
   const webFileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -62,7 +61,7 @@ export default function ProfileForm() {
 
   const triggerWebPicker = () => {
     if (webFileInputRef.current) {
-      webFileInputRef.current.value = ''; // reset pentru a permite aceeași poză din nou
+      webFileInputRef.current.value = ''; 
       webFileInputRef.current.click();
     }
   };
@@ -71,14 +70,12 @@ export default function ProfileForm() {
     const file = e.target.files?.[0];
     if (file) {
       setImage(file);
-      // preview instant
       const preview = URL.createObjectURL(file);
       setUser((prev) => ({ ...prev, avatar: preview }));
     }
   };
 
   const handleChoosePhoto = async () => {
-    // dacă vrei să permiți schimbarea pozei doar în modul edit:
     if (showChangePhotoOnlyWhenEditable && !editable) return;
 
     if (Platform.OS === 'web') {
@@ -117,13 +114,10 @@ export default function ProfileForm() {
     formData.append('name', user.name);
     formData.append('phone', user.phone ?? '');
 
-    // atașează fișierul
     if (image) {
       if (Platform.OS === 'web') {
-        // pe web e un File
         formData.append('avatar', image);
       } else {
-        // pe mobil punem tripleta { uri, name, type }
         formData.append('avatar', image);
       }
     }
@@ -132,13 +126,11 @@ export default function ProfileForm() {
       const res = await axios.post(API_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          // nu seta 'Content-Type' manual; axios pune boundary corect
         },
       });
 
       const u = res.data?.user || {};
 
-      // optimistic update -> Navbar se actualizează imediat
       setProfileLocal({
         name: u.name ?? user.name,
         email: u.email ?? user.email,
@@ -147,7 +139,7 @@ export default function ProfileForm() {
         avatar: u.avatar ?? user.avatar ?? null,
       });
 
-      // sync sigur
+      // sync 
       await refreshProfile();
 
       // UI

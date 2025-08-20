@@ -42,12 +42,10 @@ class UserProfileController extends Controller
         $user->phone = $request->phone;
 
         if ($request->hasFile('avatar')) {
-            // ștergem poza veche
             if ($user->avatar && Storage::exists('public/avatars/' . $user->avatar)) {
                 Storage::delete('public/avatars/' . $user->avatar);
             }
 
-            // salvăm poza nouă
             $filename = uniqid() . '.' . $request->file('avatar')->getClientOriginalExtension();
             $request->file('avatar')->storeAs('public/avatars', $filename);
             $user->avatar = $filename;

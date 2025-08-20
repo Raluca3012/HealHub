@@ -10,7 +10,7 @@ export default function StatCards() {
   });
 
   useEffect(() => {
-    axios.get('http://localhost:8000/api/stats') // <- înlocuiește cu IP-ul tău real
+    axios.get('http://localhost:8000/api/stats') 
       .then((response) => {
         setStats(response.data);
       })

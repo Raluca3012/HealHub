@@ -18,7 +18,7 @@ export default function GenderPieChart() {
   }, []);
 
   const total = data.male + data.female;
-  if (total === 0) return null; // sau loading spinner
+  if (total === 0) return null;
 
   const series = [
     { value: (data.male / total) * 100, color: '#4A90E2' },

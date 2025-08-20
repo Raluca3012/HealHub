@@ -23,7 +23,7 @@ use App\Http\Controllers\Auth\LoginController;
 |--------------------------------------------------------------------------
 */
 
-// Public (neautentificate)
+
 Route::post('/login', [LoginController::class, 'apiLogin']);
 
 Route::post('/register', function (Request $request) {
@@ -58,7 +58,7 @@ Route::post('/register', function (Request $request) {
     ]);
 });
 
-// Exemple publice deja existente
+
 Route::get('/patients', [PatientController::class, 'index']);
 Route::get('/patients/{id}', [PatientController::class, 'show']);
 Route::get('/patients/{id}/notes', [PatientController::class, 'getNotesByPatientId']);
@@ -92,7 +92,7 @@ Route::post('/patients/{id}/upload-photo', [PatientController::class, 'updatePho
 Route::get('/notifications/today', [NotificationController::class, 'today']);
 Route::get('/notifications/week', [NotificationController::class, 'thisWeek']);
 
-// Protejate cu token (auth:api)
+
 Route::middleware('auth:api')->group(function () {
 
     Route::post('/logout', function (Request $request) {
@@ -107,7 +107,6 @@ Route::middleware('auth:api')->group(function () {
         return $request->user();
     });
 
-    // Profilul utilizatorului logat
     Route::get('/user-profile',  [UserProfileController::class, 'show']);
     Route::post('/user-profile', [UserProfileController::class, 'update']);
 });

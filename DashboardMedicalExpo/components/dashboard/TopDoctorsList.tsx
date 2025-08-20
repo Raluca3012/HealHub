@@ -28,7 +28,6 @@ export default function TopDoctorsList() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const router = useRouter();
 
-  // ✅ Format image from storage
   const formatImageUrl = (path?: string): string => {
     if (!path) return 'https://via.placeholder.com/80';
     return path.startsWith('http') ? path : `http://localhost:8000/storage/${path}`;

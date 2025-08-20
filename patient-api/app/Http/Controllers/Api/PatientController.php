@@ -30,7 +30,6 @@ class PatientController extends Controller
         $notes = DB::table('notes')->where('patient_id', $id)->orderBy('note_date', 'desc')->get();
         $reports = DB::table('reports')->where('patient_id', $id)->get();
 
-        // ✅ photo_url corect
         $patient->photo_url = $this->resolveImageUrl($patient->image);
 
         return response()->json([

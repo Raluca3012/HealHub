@@ -41,11 +41,35 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  rightSection: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  icon: { marginRight: 6 },
-  avatar: { width: 32, height: 32, borderRadius: 16 },
-  userInfo: { marginLeft: 6, marginRight: 12, maxWidth: 160 },
-  user: { fontWeight: 'bold', fontSize: 14 },
-  subtitle: { fontSize: 12, color: '#999' },
-  logo: { width: 80, height: 32, resizeMode: 'contain' },
+  rightSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  icon: {
+    marginRight: 6
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16
+  },
+  userInfo: {
+    marginLeft: 6,
+    marginRight: 12,
+    maxWidth: 160
+  },
+  user: {
+    fontWeight: 'bold',
+    fontSize: 14
+  },
+  subtitle: {
+    fontSize: 12,
+    color: '#999'
+  },
+  logo: {
+    width: 80,
+    height: 32,
+    resizeMode: 'contain'
+  },
 });
