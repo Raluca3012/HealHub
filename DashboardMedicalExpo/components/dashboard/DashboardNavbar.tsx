@@ -1,35 +1,31 @@
+import { useAuth } from '@/app/contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import { Image, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 export default function DashboardNavbar() {
+  const { profile } = useAuth();
+
+  const name = profile?.name || '';
+  const role = profile?.role || 'Receptionist';
+  const avatar = profile?.avatar || null;
+
   return (
     <View style={styles.container}>
-      {/* Search Input */}
-      <TextInput
-        placeholder="Search..."
-        placeholderTextColor="#999"
-        style={styles.input}
-      />
-
-      {/* Right Section */}
       <View style={styles.rightSection}>
         <Ionicons name="notifications-outline" size={20} color="#4A5AA6" style={styles.icon} />
 
-        <Image
-          source={{ uri: 'https://i.pravatar.cc/40?img=4' }}
-          style={styles.avatar}
-        />
+        {avatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: '#ccc' }]} />
+        )}
+
         <View style={styles.userInfo}>
-          <Text style={styles.user}>Sarah John</Text>
-          <Text style={styles.subtitle}>Hospital</Text>
+          <Text style={styles.user} numberOfLines={1}>{name}</Text>
+          <Text style={styles.subtitle} numberOfLines={1}>{role}</Text>
         </View>
 
-        <Image
-  source={require('../../assets/images/logo.png')} 
-  style={styles.logo}
-/>
-
-        
+        <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
       </View>
     </View>
   );
@@ -42,45 +38,14 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 20,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  input: {
-    backgroundColor: '#f4f6fa',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    width: 280,
-    fontSize: 14,
-  },
-  rightSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  icon: {
-    marginRight: 6,
-  },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  userInfo: {
-    marginLeft: 6,
-    marginRight: 12,
-  },
-  user: {
-    fontWeight: 'bold',
-    fontSize: 14,
-  },
-  subtitle: {
-    fontSize: 12,
-    color: '#999',
-  },
-  logo: {
-    width: 80,
-    height: 32,
-    resizeMode: 'contain',
-  },
+  rightSection: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  icon: { marginRight: 6 },
+  avatar: { width: 32, height: 32, borderRadius: 16 },
+  userInfo: { marginLeft: 6, marginRight: 12, maxWidth: 160 },
+  user: { fontWeight: 'bold', fontSize: 14 },
+  subtitle: { fontSize: 12, color: '#999' },
+  logo: { width: 80, height: 32, resizeMode: 'contain' },
 });
