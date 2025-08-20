@@ -84,7 +84,7 @@ export default function DoctorsScreen() {
         renderItem={({ item }) => (
           <View style={styles.row}>
             <Image source={{ uri: formatImageUrl(item.image) }} style={styles.avatar} />
-            <Text style={[styles.cell, styles.nameText]}>{item.name}</Text>
+            <Text style={[styles.cell, styles.nameText]}>Dr. {item.name}</Text>
             <Text style={styles.cell}>#NP-{String(item.id).padStart(8, '0')}</Text>
             <Text style={styles.cell}>{formatDate(item.joining)}</Text>
             <Text style={styles.cell}>{item.mobile}</Text>

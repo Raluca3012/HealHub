@@ -37,6 +37,8 @@
         </select>
     </label><br>
 
+    <label>Problem: <input type="text" name="problem" value="{{ $patient->problem }}"></label><br>
+
     <label>Change Photo: <input type="file" name="photo"></label><br>
     @if($patient->image)
         <img src="{{ asset('storage/' . $patient->image) }}" width="80"><br>

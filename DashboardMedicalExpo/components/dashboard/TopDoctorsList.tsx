@@ -71,7 +71,7 @@ export default function TopDoctorsList() {
           <View style={styles.left}>
             <Image source={{ uri: formatImageUrl(doc.image) }} style={styles.avatar} />
             <View>
-              <Text style={styles.name}>{doc.name}</Text>
+              <Text style={styles.name}>Dr. {doc.name}</Text>
               <Text style={styles.specialty}>{doc.specialty}</Text>
             </View>
           </View>

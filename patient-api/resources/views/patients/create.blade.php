@@ -8,7 +8,7 @@
     <label>Name: <input type="text" name="name" required></label><br>
 
     <label>Gender:
-        <select name="gender">
+        <select name="gender" required>
             <option>Male</option>
             <option>Female</option>
         </select>
@@ -35,6 +35,8 @@
             @endforeach
         </select>
     </label><br>
+
+    <label>Problem: <input type="text" name="problem"></label><br>
 
     <label>Photo: <input type="file" name="photo"></label><br>
 

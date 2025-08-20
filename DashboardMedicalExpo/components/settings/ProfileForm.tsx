@@ -30,8 +30,8 @@ export default function ProfileForm() {
     avatar: '',
   });
 
-  const [editable, setEditable] = useState(false);
   const [image, setImage] = useState<any>(null);
+  const [editable, setEditable] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -40,17 +40,26 @@ export default function ProfileForm() {
       .get(API_URL, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setUser(res.data))
+      .then((res) => {
+        if (res.data.user) {
+          setUser({
+            name: res.data.user.name || '',
+            email: res.data.user.email || '',
+            phone: res.data.user.phone || '',
+            avatar: res.data.user.avatar || '',
+          });
+        }
+      })
       .catch((err) => {
         console.log(err);
-        Alert.alert('Error', 'Could not fetch profile');
+        Alert.alert('Error', 'Failed to load profile data.');
       });
   }, [token]);
 
   const handleChoosePhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permisiune necesară', 'Avem nevoie de acces la galerie');
+      Alert.alert('Permission required', 'Access to the gallery is needed.');
       return;
     }
 
@@ -60,46 +69,59 @@ export default function ProfileForm() {
       quality: 1,
     });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const img = result.assets[0];
-      setImage(img);
-      setUser((prev) => ({ ...prev, avatar: img.uri }));
+    if (!result.canceled && result.assets.length > 0) {
+      const pickedImage = result.assets[0];
+      setImage(pickedImage);
+      setUser((prev) => ({ ...prev, avatar: pickedImage.uri }));
     }
   };
 
   const handleSave = async () => {
-    const formData = new FormData();
+    const formData: any = new FormData();
     formData.append('name', user.name);
     formData.append('phone', user.phone ?? '');
 
-    if (image && image.uri) {
+    if (image?.uri) {
+      const uri = image.uri;
+      const uriParts = uri.split('.');
+      const ext = uriParts.length > 1 ? uriParts[uriParts.length - 1] : 'jpg';
+      const fileName = `avatar.${ext}`;
+      const mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+
       formData.append('avatar', {
-        uri: image.uri,
-        name: 'avatar.jpg',
-        type: 'image/jpeg',
-      } as any);
+        uri,
+        name: fileName,
+        type: mimeType,
+      });
     }
 
     try {
-      const response = await axios.post(API_URL, formData, {
+      const res = await axios.post(API_URL, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      setUser(response.data.user); 
-      Alert.alert('Succes');
+      setUser({
+        name: res.data.user.name || '',
+        email: res.data.user.email || '',
+        phone: res.data.user.phone || '',
+        avatar: res.data.user.avatar || '',
+      });
+
       setEditable(false);
+      setImage(null);
+      Alert.alert('Success', 'Profile updated successfully.');
     } catch (err: any) {
-      console.log(err.response?.data || err);
-      Alert.alert('Error');
+      console.log('Backend error:', err.response?.data || err);
+      Alert.alert('Error', 'Failed to update profile.');
     }
   };
 
   return (
     <View style={styles.card}>
-      <Text style={styles.title}>Profil</Text>
+      <Text style={styles.title}>Profile</Text>
       <View style={styles.content}>
         <View style={styles.left}>
           {user.avatar ? (
@@ -109,47 +131,45 @@ export default function ProfileForm() {
           )}
           {editable && (
             <TouchableOpacity onPress={handleChoosePhoto}>
-              <Text style={styles.changePhoto}>📷 Schimbă poza</Text>
+              <Text style={styles.changePhoto}>📷 Change photo</Text>
             </TouchableOpacity>
           )}
         </View>
 
         <View style={styles.right}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nume complet</Text>
-            <TextInput
-              style={styles.input}
-              value={user.name}
-              editable={editable}
-              onChangeText={(text) => setUser({ ...user, name: text })}
-            />
-          </View>
+          <Text style={styles.label}>Full Name</Text>
+          <TextInput
+            style={styles.input}
+            value={user.name || ''}
+            editable={editable}
+            onChangeText={(text) => setUser({ ...user, name: text })}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput style={styles.input} value={user.email} editable={false} />
-          </View>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            value={user.email || ''}
+            editable={false}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Telefon</Text>
-            <TextInput
-              style={styles.input}
-              value={user.phone ?? ''}
-              editable={editable}
-              onChangeText={(text) => setUser({ ...user, phone: text })}
-            />
-          </View>
+          <Text style={styles.label}>Phone</Text>
+          <TextInput
+            style={styles.input}
+            value={user.phone || ''}
+            editable={editable}
+            onChangeText={(text) => setUser({ ...user, phone: text })}
+          />
 
           {!editable ? (
             <TouchableOpacity
-              style={styles.changePassword}
+              style={styles.editBtn}
               onPress={() => setEditable(true)}
             >
-              <Text style={{ color: '#333' }}>Editează profilul</Text>
+              <Text>Edit profile</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={{ color: '#fff' }}>Salvează modificările</Text>
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+              <Text style={{ color: '#fff' }}>Save changes</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -172,7 +192,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
   },
   left: {
     alignItems: 'center',
@@ -185,38 +204,36 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   changePhoto: {
-    color: '#333',
-    fontSize: 14,
+    fontSize: 13,
+    color: '#444',
   },
   right: {
     flex: 1,
   },
-  inputGroup: {
-    marginBottom: 10,
-  },
   label: {
-    fontWeight: '500',
+    fontWeight: 'bold',
+    marginTop: 10,
     marginBottom: 4,
   },
   input: {
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#eee',
     padding: 8,
     borderRadius: 6,
   },
-  changePassword: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    padding: 6,
-    borderWidth: 1,
-    borderColor: '#e0c97d',
-    borderRadius: 6,
+  editBtn: {
+    marginTop: 14,
     backgroundColor: '#fff8dc',
-  },
-  saveButton: {
-    marginTop: 16,
+    padding: 8,
+    borderRadius: 6,
+    borderColor: '#999',
+    borderWidth: 1,
     alignSelf: 'flex-start',
+  },
+  saveBtn: {
+    marginTop: 14,
+    backgroundColor: '#2e7d32',
     padding: 10,
     borderRadius: 6,
-    backgroundColor: '#2e7d32',
+    alignSelf: 'flex-start',
   },
 });

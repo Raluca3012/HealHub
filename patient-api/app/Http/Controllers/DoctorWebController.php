@@ -49,7 +49,7 @@ class DoctorWebController extends Controller
             'experience_years' => $request->experience_years,
             'image' => $path,
             'joining_date' => now(),
-            'created_at' => now(),
+            
         ]);
 
         return redirect()->route('doctors.index')->with('success', 'Doctor added');

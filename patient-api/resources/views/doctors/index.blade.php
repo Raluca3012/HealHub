@@ -30,7 +30,7 @@
                         No Image
                     @endif
                 </td>
-                <td>{{ $doctor->name }}</td>
+                <td>Dr. {{ $doctor->name }}</td>
                 <td>{{ $doctor->email }}</td>
                 <td>{{ $doctor->phone }}</td>
                 <td>{{ $doctor->specialty }}</td>

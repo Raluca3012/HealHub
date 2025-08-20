@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\DeviceController;
 use App\Http\Controllers\Api\ModelController;
 use App\Http\Controllers\Api\NotificationController;
 
+use App\Http\Controllers\Api\UserProfileController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -104,18 +106,15 @@ Route::post('/patients/{id}/upload-photo', [PatientController::class, 'updatePho
 Route::get('/notifications/today', [NotificationController::class, 'today']);
 
 Route::get('/notifications/week', [NotificationController::class, 'thisWeek']);
-use App\Http\Controllers\Api\UserProfileController;
 
-Route::middleware('auth:api')->group(function () {
-    Route::get('/user-profile', [UserProfileController::class, 'getProfile']);
-    Route::post('/user-profile', [UserProfileController::class, 'updateProfile']);
-});
 
 Route::get('/appointments/times/{doctor_id}/{date}', [AppointmentController::class, 'takenTimes']);
 
-Route::post('/appointments', [\App\Http\Controllers\Api\AppointmentController::class, 'store']);
+Route::post('/appointments', [AppointmentController::class, 'store']);
 
 
+Route::middleware('auth:api')->get('/user-profile', [UserProfileController::class, 'show']);
+Route::middleware('auth:api')->post('/user-profile', [UserProfileController::class, 'update']);
 
 
 Route::options('{any}', function (Request $request) {
@@ -124,4 +123,6 @@ Route::options('{any}', function (Request $request) {
         ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         ->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
 })->where('any', '.*');
+
+
 

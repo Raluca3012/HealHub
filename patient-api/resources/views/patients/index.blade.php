@@ -15,6 +15,8 @@
         <th>Address</th>
         <th>Room</th>
         <th>Doctor</th>
+        <th>Problem</th>
+        <th>Check-in</th>
         <th>Actions</th>
     </tr>
     @foreach($patients as $patient)
@@ -35,6 +37,8 @@
             <td>{{ $patient->address }}</td>
             <td>{{ $patient->room }}</td>
             <td>{{ $patient->doctor_name }}</td>
+            <td>{{ $patient->problem }}</td>
+            <td>{{ $patient->checkin }}</td>
             <td><a href="{{ route('patients.edit', $patient->id) }}">Edit</a></td>
         </tr>
     @endforeach

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 class PatientWebController extends Controller
 {
@@ -43,13 +44,17 @@ class PatientWebController extends Controller
             'room' => 'nullable|string',
             'status' => 'nullable|string',
             'doctor_id' => 'nullable|integer',
+            'problem' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $data = $request->only([
             'name', 'gender', 'email', 'mobile',
-            'address', 'room', 'status', 'doctor_id'
+            'address', 'room', 'status', 'doctor_id', 'problem'
         ]);
+
+        // Setează automat checkin-ul cu data curentă
+        $data['checkin'] = Carbon::now()->toDateString();
 
         // Poza pacient
         if ($request->hasFile('photo')) {
@@ -74,12 +79,13 @@ class PatientWebController extends Controller
             'room' => 'nullable|string',
             'status' => 'nullable|string',
             'doctor_id' => 'nullable|integer',
+            'problem' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $data = $request->only([
             'name', 'gender', 'email', 'mobile',
-            'address', 'room', 'status', 'doctor_id'
+            'address', 'room', 'status', 'doctor_id', 'problem'
         ]);
 
         $patient = DB::table('patients')->where('id', $id)->first();
@@ -96,6 +102,7 @@ class PatientWebController extends Controller
             $data['image'] = $path;
         }
 
+        // Nu actualizăm checkin-ul, îl păstrăm pe cel vechi
         DB::table('patients')->where('id', $id)->update($data);
 
         return redirect()->route('patients.index')->with('success', 'Patient updated successfully.');

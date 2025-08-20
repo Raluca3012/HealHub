@@ -53,7 +53,7 @@ export default function AppointmentsScreen() {
   const selectedYear = new Date().getFullYear();
   const monthDates = getMonthDates(selectedYear, selectedMonthIndex);
   const formattedDate = new Date(selectedYear, selectedMonthIndex, selectedDay)
-    .toLocaleDateString('en-CA'); 
+    .toLocaleDateString('en-CA');
 
   const fetchAppointments = async () => {
     try {
@@ -206,7 +206,7 @@ export default function AppointmentsScreen() {
                   </View>
                   <View style={styles.tableCell}>
                     <Feather name="user" size={14} color="#2f3c7e" />
-                    <Text style={styles.info}>{item.doctor_name}</Text>
+                    <Text style={styles.info}>Dr. {item.doctor_name}</Text> {/* AICI e modificarea */}
                   </View>
                   <View style={styles.tableCell}>
                     <Feather name="calendar" size={14} color="#2f3c7e" />
@@ -219,6 +219,7 @@ export default function AppointmentsScreen() {
                 </View>
               </View>
             ))}
+
 
           </View>
         </View>
@@ -264,7 +265,7 @@ export default function AppointmentsScreen() {
             <TextInput
               style={styles.input}
               placeholder="Search doctor"
-              value={searchDoctor}
+              value={selectedDoctor ? `Dr. ${selectedDoctor.name}` : searchDoctor}
               onChangeText={(text) => {
                 setSearchDoctor(text);
                 setSelectedDoctor(null);
@@ -280,13 +281,13 @@ export default function AppointmentsScreen() {
                       setSearchDoctor(d.name);
                       setFormData(prev => ({ ...prev, specialist: d.specialist }));
                     }}>
-                      <Text>{d.name} (#{d.id})</Text>
+                      <Text>Dr. {d.name} (#{d.id})</Text>
                     </Pressable>
                   ))}
               </ScrollView>
             )}
             {selectedDoctor && (
-              <Text>Selected: {selectedDoctor.name} (#{selectedDoctor.id})</Text>
+              <Text>Selected: Dr. {selectedDoctor.name} (#{selectedDoctor.id})</Text>
             )}
 
             <TextInput

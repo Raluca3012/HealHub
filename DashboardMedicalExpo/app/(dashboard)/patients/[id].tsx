@@ -1,12 +1,12 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface Patient {
@@ -178,7 +178,7 @@ export default function PatientViewScreen() {
               style={styles.doctorImage}
             />
             <View>
-              <Text style={styles.doctorName}>{doctor?.name}</Text>
+              <Text style={styles.doctorName}>Dr. {doctor?.name}</Text>
               {(ratingCount ?? 0) > 0 && rating !== null ? (
                 <Text style={styles.ratingText}>
                   ⭐ {rating.toFixed(1)} ({ratingCount})
@@ -213,7 +213,7 @@ export default function PatientViewScreen() {
                   style={styles.profileImage}
                 />
                 <View style={{ flex: 1, marginLeft: 40 }}>
-                  <Text style={styles.detail}>{appt.doctor_name || 'Unavailable'}</Text>
+                  <Text style={styles.detail}>Dr. {appt.doctor_name || 'Unavailable'}</Text>
                   <Text style={{ color: '#888' }}>{appt.doctor_specialty || 'Unknown'}</Text>
                 </View>
                 <View style={styles.dateBox}>

@@ -59,7 +59,7 @@ class NotificationController extends Controller
         $notifications = $appointments->map(function ($appt) {
             return [
                 'title' => 'Upcoming Appointment',
-                'message' => "On {$appt->appointment_date}, patient {$appt->patient_name} has an appointment with {$appt->doctor_name} ({$appt->specialty}) at {$appt->appointment_time}."
+                'message' => "On {$appt->appointment_date}, patient {$appt->patient_name} has an appointment with Dr. {$appt->doctor_name} ({$appt->specialty}) at {$appt->appointment_time}."
             ];
         });
 
