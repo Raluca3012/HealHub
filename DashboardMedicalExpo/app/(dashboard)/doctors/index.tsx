@@ -138,10 +138,10 @@ export default function DoctorsScreen() {
                   <Feather name="eye" size={14} color="green" />
                   <Text style={[styles.dropdownText, { color: 'green' }]}>View</Text>
                 </Pressable>
-                <Pressable style={styles.dropdownItem} onPress={hideMenu}>
+                {/* <Pressable style={styles.dropdownItem} onPress={hideMenu}>
                   <Feather name="slash" size={14} color="red" />
                   <Text style={[styles.dropdownText, { color: 'red' }]}>Suspend</Text>
-                </Pressable>
+                </Pressable> */}
               </View>
             </View>
           </TouchableWithoutFeedback>

@@ -18,56 +18,75 @@ class NotificationController extends Controller
             ->join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
             ->whereDate('appointments.appointment_date', $today)
             ->select(
-                'appointments.appointment_time',
-                'appointments.specialty',
-                'patients.name as patient_name',
-                'doctors.name as doctor_name'
-            )
-            ->get();
-
-        $notifications = $appointments->map(function ($appt) {
-            return [
-                'title' => 'Appointment Today',
-                'message' => "Patient {$appt->patient_name} has an appointment with Dr. {$appt->doctor_name} ({$appt->specialty}) at {$appt->appointment_time}.",
-            ];
-        });
-
-        return response()->json($notifications);
-    }
-
-
-   public function thisWeek()
-{
-    try {
-        $startOfWeek = Carbon::now()->startOfWeek()->toDateString();
-        $endOfWeek = Carbon::now()->endOfWeek()->toDateString();
-
-        $appointments = DB::table('appointments')
-            ->join('patients', 'appointments.patient_id', '=', 'patients.id')
-            ->join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
-            ->whereBetween('appointment_date', [$startOfWeek, $endOfWeek])
-            ->orderBy('appointment_date')
-            ->select([
                 'appointments.appointment_date',
                 'appointments.appointment_time',
                 'appointments.specialty',
+                'patients.id as patient_id',
                 'patients.name as patient_name',
+                'patients.mobile as patient_phone', // telefon pacient
+                'doctors.id as doctor_id',
                 'doctors.name as doctor_name'
-            ])
+            )
+            ->orderBy('appointments.appointment_time', 'asc')
             ->get();
 
         $notifications = $appointments->map(function ($appt) {
+            $id = sha1($appt->appointment_date.'|'.$appt->appointment_time.'|'.$appt->patient_id.'|'.$appt->doctor_id); // id stabil
             return [
-                'title' => 'Upcoming Appointment',
-                'message' => "On {$appt->appointment_date}, patient {$appt->patient_name} has an appointment with Dr. {$appt->doctor_name} ({$appt->specialty}) at {$appt->appointment_time}."
+                'id'            => $id,
+                'title'         => 'Appointment Today',
+                'message'       => "Patient {$appt->patient_name} has an appointment with Dr. {$appt->doctor_name} ({$appt->specialty}) at {$appt->appointment_time}.",
+                'patient_phone' => $appt->patient_phone,
             ];
         });
 
         return response()->json($notifications);
-
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Server error', 'details' => $e->getMessage()], 500);
     }
-}
 
+    public function thisWeek()
+    {
+        try {
+            $startOfWeek = Carbon::now()->startOfWeek()->toDateString();
+            $endOfWeek   = Carbon::now()->endOfWeek()->toDateString();
+
+            $appointments = DB::table('appointments')
+                ->join('patients', 'appointments.patient_id', '=', 'patients.id')
+                ->join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
+                ->whereBetween('appointments.appointment_date', [$startOfWeek, $endOfWeek])
+                ->orderBy('appointments.appointment_date')
+                ->orderBy('appointments.appointment_time')
+                ->select(
+                    'appointments.appointment_date',
+                    'appointments.appointment_time',
+                    'appointments.specialty',
+                    'patients.id as patient_id',
+                    'patients.name as patient_name',
+                    'patients.mobile as patient_phone', // telefon pacient
+                    'doctors.id as doctor_id',
+                    'doctors.name as doctor_name'
+                )
+                ->get();
+
+            $notifications = $appointments->map(function ($appt) {
+                $id = sha1($appt->appointment_date.'|'.$appt->appointment_time.'|'.$appt->patient_id.'|'.$appt->doctor_id); // id stabil
+                return [
+                    'id'            => $id,
+                    'title'         => 'Upcoming Appointment',
+                    'message'       => "On {$appt->appointment_date}, patient {$appt->patient_name} has an appointment with Dr. {$appt->doctor_name} ({$appt->specialty}) at {$appt->appointment_time}.",
+                    'patient_phone' => $appt->patient_phone,
+                ];
+            });
+
+            return response()->json($notifications);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Server error', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        // no-op pentru notificări generate din programări; front-end ascunde local
+        return response()->json(['message' => 'Dismissed'], 200);
+    }
 }

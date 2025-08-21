@@ -99,7 +99,7 @@ Route::post('/patients/{id}/upload-photo', [PatientController::class, 'updatePho
 
 Route::get('/notifications/today', [NotificationController::class, 'today']);
 Route::get('/notifications/week', [NotificationController::class, 'thisWeek']);
-
+Route::delete('/notifications/{id}', [NotificationController::class, 'destroy']);
 
 Route::middleware('auth:api')->group(function () {
 
