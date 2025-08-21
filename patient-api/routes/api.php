@@ -88,7 +88,7 @@ Route::put('/devices/{id}', [DeviceController::class, 'update']);
 
 
 // Appointments
-Route::get('/appointments', [AppointmentController::class, 'index']); // optional, dar util
+Route::get('/appointments', [AppointmentController::class, 'index']);
 Route::get('/appointments/by-date/{date}', [AppointmentController::class, 'getByDate']);
 Route::get('/appointments/times/{doctor_id}/{date}', [AppointmentController::class, 'takenTimes']);
 Route::post('/appointments', [AppointmentController::class, 'store']);

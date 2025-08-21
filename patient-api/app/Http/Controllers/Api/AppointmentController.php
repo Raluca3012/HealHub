@@ -16,7 +16,7 @@ class AppointmentController extends Controller
 
     public function getByDate($date)
     {
-        // $date trebuie sa fie Y-m-d
+      
         $appointments = DB::table('appointments')
             ->join('patients', 'appointments.patient_id', '=', 'patients.id')
             ->join('doctors', 'appointments.doctor_id', '=', 'doctors.id')
@@ -39,7 +39,7 @@ class AppointmentController extends Controller
 
     public function takenTimes($doctor_id, $date)
     {
-        // $date: Y-m-d
+      
         $takenTimes = Appointment::where('doctor_id', $doctor_id)
             ->whereDate('appointment_date', $date)
             ->pluck('appointment_time')
@@ -50,7 +50,7 @@ class AppointmentController extends Controller
 
     public function store(Request $request)
     {
-        // Validare strictă pe format (evităm 22-08-2025)
+        
         $validated = $request->validate([
             'patient_id'       => 'required|exists:patients,id',
             'doctor_id'        => 'required|exists:doctors,id',
@@ -59,7 +59,6 @@ class AppointmentController extends Controller
             'specialty'        => 'nullable|string|max:255',
         ]);
 
-        // Prevenim dublarea slotului (același doctor, aceeași zi & oră)
         $exists = Appointment::where('doctor_id', $validated['doctor_id'])
             ->whereDate('appointment_date', $validated['appointment_date'])
             ->where('appointment_time', $validated['appointment_time'])

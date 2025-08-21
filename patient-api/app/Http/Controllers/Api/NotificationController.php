@@ -23,7 +23,7 @@ class NotificationController extends Controller
                 'appointments.specialty',
                 'patients.id as patient_id',
                 'patients.name as patient_name',
-                'patients.mobile as patient_phone', // telefon pacient
+                'patients.mobile as patient_phone', 
                 'doctors.id as doctor_id',
                 'doctors.name as doctor_name'
             )
@@ -31,7 +31,7 @@ class NotificationController extends Controller
             ->get();
 
         $notifications = $appointments->map(function ($appt) {
-            $id = sha1($appt->appointment_date.'|'.$appt->appointment_time.'|'.$appt->patient_id.'|'.$appt->doctor_id); // id stabil
+            $id = sha1($appt->appointment_date.'|'.$appt->appointment_time.'|'.$appt->patient_id.'|'.$appt->doctor_id); 
             return [
                 'id'            => $id,
                 'title'         => 'Appointment Today',
@@ -61,14 +61,14 @@ class NotificationController extends Controller
                     'appointments.specialty',
                     'patients.id as patient_id',
                     'patients.name as patient_name',
-                    'patients.mobile as patient_phone', // telefon pacient
+                    'patients.mobile as patient_phone', 
                     'doctors.id as doctor_id',
                     'doctors.name as doctor_name'
                 )
                 ->get();
 
             $notifications = $appointments->map(function ($appt) {
-                $id = sha1($appt->appointment_date.'|'.$appt->appointment_time.'|'.$appt->patient_id.'|'.$appt->doctor_id); // id stabil
+                $id = sha1($appt->appointment_date.'|'.$appt->appointment_time.'|'.$appt->patient_id.'|'.$appt->doctor_id); 
                 return [
                     'id'            => $id,
                     'title'         => 'Upcoming Appointment',
@@ -86,7 +86,6 @@ class NotificationController extends Controller
 
     public function destroy($id)
     {
-        // no-op pentru notificări generate din programări; front-end ascunde local
         return response()->json(['message' => 'Dismissed'], 200);
     }
 }

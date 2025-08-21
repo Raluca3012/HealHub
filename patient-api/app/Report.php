@@ -17,7 +17,6 @@ class Report extends Model
         'unit',
     ];
 
-    // Adaugă accesoriu pentru frontend
     protected $appends = ['test_type', 'type', 'value'];
 
     public function getTestTypeAttribute()
