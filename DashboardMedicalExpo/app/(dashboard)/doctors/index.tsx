@@ -19,6 +19,7 @@ export default function DoctorsScreen() {
   const [loading, setLoading] = useState(true);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/doctors')
@@ -57,13 +58,25 @@ export default function DoctorsScreen() {
     return path.startsWith('http') ? path : `http://localhost:8000/storage/${path}`;
   };
 
+  const filterDoctors = () => {
+    return doctors.filter((doctor) =>
+      doctor.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Doctors List</Text>
 
       <View style={styles.searchRow}>
         <Feather name="search" size={18} color="#999" style={styles.searchIcon} />
-        <TextInput style={styles.searchInput} placeholder="Search..." placeholderTextColor="#999" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search..."
+          placeholderTextColor="#999"
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+        />
       </View>
 
       <View style={styles.headerRow}>
@@ -79,7 +92,7 @@ export default function DoctorsScreen() {
       </View>
 
       <FlatList
-        data={doctors}
+        data={filterDoctors()}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.row}>
@@ -191,7 +204,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginRight: -40,
     marginLeft: 130,
-    
   },
   row: {
     flexDirection: 'row',

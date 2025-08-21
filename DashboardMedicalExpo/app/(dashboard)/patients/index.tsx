@@ -27,6 +27,7 @@ export default function PatientsScreen() {
   const [loading, setLoading] = useState(true);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetch('http://127.0.0.1:8000/api/patients')
@@ -60,6 +61,12 @@ export default function PatientsScreen() {
     minWidth: 100,
   });
 
+  const filterPatients = () => {
+    return patients.filter((patient) =>
+      patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Patients List</Text>
@@ -70,6 +77,8 @@ export default function PatientsScreen() {
           style={styles.searchInput}
           placeholder="Search..."
           placeholderTextColor="#999"
+          value={searchTerm}
+          onChangeText={setSearchTerm}
         />
       </View>
 
@@ -87,7 +96,7 @@ export default function PatientsScreen() {
       </View>
 
       <FlatList
-        data={patients}
+        data={filterPatients()}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View>
@@ -97,7 +106,7 @@ export default function PatientsScreen() {
               <Text style={styles.cell}>#N-{String(item.id).padStart(8, '0')}</Text>
               <Text style={styles.cell}>{item.checkin}</Text>
               <Text style={styles.cell}>{item.mobile}</Text>
-              <Text style={styles.cell}>{item.doctor_name}</Text>
+              <Text style={styles.cell}>Dr. {item.doctor_name}</Text>
               <Text style={styles.cell}>{item.problem}</Text>
               <Text style={styles.cell}>{item.room}</Text>
               <View style={[getStatusStyle(item.status)]}>
