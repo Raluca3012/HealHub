@@ -86,7 +86,15 @@ Route::patch('/models/{id}/status', [ModelController::class, 'updateStatus']);
 Route::put('/models/{id}', [ModelController::class, 'update']);
 Route::put('/devices/{id}', [DeviceController::class, 'update']);
 
+
+// Appointments
+Route::get('/appointments', [AppointmentController::class, 'index']); // optional, dar util
+Route::get('/appointments/by-date/{date}', [AppointmentController::class, 'getByDate']);
+Route::get('/appointments/times/{doctor_id}/{date}', [AppointmentController::class, 'takenTimes']);
 Route::post('/appointments', [AppointmentController::class, 'store']);
+
+
+
 Route::post('/patients/{id}/upload-photo', [PatientController::class, 'updatePhoto']);
 
 Route::get('/notifications/today', [NotificationController::class, 'today']);
@@ -118,3 +126,6 @@ Route::options('{any}', function (Request $request) {
         ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         ->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
 })->where('any', '.*');
+
+
+

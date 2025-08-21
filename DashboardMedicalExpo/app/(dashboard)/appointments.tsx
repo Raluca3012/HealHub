@@ -83,14 +83,20 @@ export default function AppointmentsScreen() {
   };
 
   const fetchTakenTimes = async () => {
-    if (!selectedDoctor || !formData.appointment_date) return;
-    try {
-      const res = await axios.get(`http://127.0.0.1:8000/api/appointments/times/${selectedDoctor.id}/${formData.appointment_date}`);
-      setTakenTimes(res.data);
-    } catch (e) {
-      console.error('Error loading taken times', e);
-    }
-  };
+  const date = formData.appointment_date || formattedDate;
+  if (!selectedDoctor || !date) return;
+  try {
+    const res = await axios.get(`http://127.0.0.1:8000/api/appointments/times/${selectedDoctor.id}/${date}`);
+    setTakenTimes(Array.isArray(res.data) ? res.data : []);
+  } catch (e) {
+    console.error('Error loading taken times', e);
+  }
+};
+
+useEffect(() => {
+  fetchTakenTimes();
+}, [selectedDoctor, formData.appointment_date]);
+
 
   const handleAppointmentSubmit = async () => {
     if (!selectedPatient || !selectedDoctor) return;
