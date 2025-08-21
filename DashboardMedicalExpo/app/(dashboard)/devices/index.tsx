@@ -193,11 +193,11 @@ export default function DevicesScreen() {
                   <Feather name="edit-2" size={14} color="#3b82f6" />
                   <Text style={[styles.dropdownText, { color: '#3b82f6' }]}>Edit</Text>
                 </Pressable>
-                <Pressable onPress={() => setOpenIndex(null)} style={styles.dropdownItem}>
+                {/* <Pressable onPress={() => setOpenIndex(null)} style={styles.dropdownItem}>
                   <Feather name="eye" size={14} color="green" />
                   <Text style={[styles.dropdownText, { color: 'green' }]}>View</Text>
-                </Pressable>
-                <Pressable
+                </Pressable> */}
+                {/* <Pressable
                   onPress={() => updateStatus(device.id, 'approved')}
                   style={styles.dropdownItem}
                 >
@@ -210,7 +210,7 @@ export default function DevicesScreen() {
                 >
                   <Feather name="slash" size={14} color="red" />
                   <Text style={[styles.dropdownText, { color: 'red' }]}>Suspend</Text>
-                </Pressable>
+                </Pressable> */}
               </View>
             )}
           </View>
